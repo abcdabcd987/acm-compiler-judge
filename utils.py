@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import time
 import pytz
 import StringIO
+import dateutil.parser
 from datetime import datetime
 
 import settings
@@ -20,6 +22,12 @@ def local_to_utc(local):
     return settings.TIMEZONE.localize(local, is_dst=False).astimezone(pytz.utc)
 
 
+def parse_to_utc(s):
+    d = dateutil.parser.parse(s)
+    epoch = time.mktime(d.timetuple()) - d.utcoffset().total_seconds()
+    return datetime.fromtimestamp(epoch)
+
+
 def nl2p(text):
     return ''.join("<p>%s</p>" % line for line in text.splitlines() if line)
 
@@ -30,12 +38,12 @@ def normalize_nl(text):
 
 def testcase_to_text(t):
     sio = StringIO.StringIO()
-    t = json.loads(t['content'])
     print >> sio, t['program']
     print >> sio, '\n/* metadata:'
     for key, value in t.iteritems():
-        print >> sio, '=== {} ==='.format(key)
-        print >> sio, value
+        if key != 'program':
+            print >> sio, '=== {} ==='.format(key)
+            print >> sio, value
     print >> sio, '\n*/\n'
     return sio.getvalue()
 

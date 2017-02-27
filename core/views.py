@@ -3,16 +3,21 @@ from __future__ import unicode_literals
 import os
 import uuid
 import json
+import functools
 from datetime import datetime
-import dateutil
 import StringIO
 from flask import request, redirect, session, url_for, flash, render_template, jsonify, abort, send_file, Response
-from sqlalchemy import func
 
-from . import app
-from ..models import *
-from ..database import db_session
-from .. import settings, utils
+from web import app
+from models import *
+from database import db_session
+import settings, utils
+
+
+def copy_sqlalchemy_object_as_dict(o):
+    d = dict(o.__dict__)
+    del d['_sa_instance_state']
+    return d
 
 
 @app.route(settings.WEBROOT + '/download/testcase/<int:id>.txt')
@@ -39,14 +44,18 @@ def token_required(f):
 @app.route(settings.WEBROOT + '/backend/dispatch/build', methods=['POST'])
 @token_required
 def backend_dispatch_build():
-    version = db_session.query(Version)
-                        .filter(Version.phase == 'build', Version.status == 'pending')
-                        .order_by(Version.id.asc())
+    version = db_session.query(Version)\
+                        .filter(Version.phase == 'build', Version.status == 'pending')\
+                        .order_by(Version.id.asc())\
                         .first()
     if not version:
         return jsonify({'found': False})
-    compiler = db_session.query(compiler).filter(compiler.id == version.id).one()
-    ret = {'found': True, 'compiler': dict(compiler.__dict__), 'version': dict(version.__dict__)}
+    compiler = db_session.query(Compiler).filter(Compiler.id == version.compiler_id).one()
+    ret = {
+        'found': True, 
+        'compiler': copy_sqlalchemy_object_as_dict(compiler),
+        'version': copy_sqlalchemy_object_as_dict(version)
+    }
     version.status = 'building'
     db_session.commit()
     return jsonify(ret)
@@ -56,21 +65,27 @@ def backend_dispatch_build():
 @token_required
 def backend_submit_build_log():
     id = int(request.form['id'])
+    print id
     judge = request.form['judge']
+    print judge
     message = request.form['message']
-    committed_at = dateutil.parser.parse(request.form['committed_at'])
-    committed_at = utils.local_to_utc(committed_at)
+    print message
+    committed_at = utils.parse_to_utc(request.form['committed_at'])
+    print committed_at
     status = request.form['status']
+    print status
     build_time = float(request.form['build_time'])
+    print build_time
     log = request.form['log']
+    print log
 
     version = db_session.query(Version).filter(Version.id == id).one()
     build_log = BuildLog(version_id=version.id,
                          build_time=build_time,
                          created_at=datetime.utcnow())
-    db_session.add(log)
+    db_session.add(build_log)
     db_session.commit()
-    with open(os.path.join(settings.CORE_BUILD_LOG_PATH, '{:d}.txt'.format(log.id))) as f:
+    with open(os.path.join(settings.CORE_BUILD_LOG_PATH, '{:d}.txt'.format(build_log.id)), 'w') as f:
         f.write(log)
 
     version.message = message
@@ -87,15 +102,20 @@ def backend_submit_build_log():
 @app.route(settings.WEBROOT + '/backend/dispatch/testrun', methods=['POST'])
 @token_required
 def backend_dispatch_testrun():
-    t = db_session.query(TestRun)
-                  .filter(TestRun.status == 'pending')
-                  .order_by(TestRun.id.asc())
+    t = db_session.query(TestRun)\
+                  .filter(TestRun.status == 'pending')\
+                  .order_by(TestRun.id.asc())\
                   .first()
     if not t:
         return jsonify({'found': False})
     v = db_session.query(Version).filter(Version.id == t.version_id).one()
-    c = db_session.query(Compiler).filter(Compiler.id == t.compiler_id).one()
-    ret = {'found': True, 'testrun': dict(t.__dict__), 'version': dict(v.__dict__), 'compiler': dict(c.__dict__)}
+    c = db_session.query(Compiler).filter(Compiler.id == v.compiler_id).one()
+    ret = {
+        'found': True,
+        'testrun': copy_sqlalchemy_object_as_dict(t),
+        'version': copy_sqlalchemy_object_as_dict(v),
+        'compiler': copy_sqlalchemy_object_as_dict(c)
+    }
     t.status = 'running'
     t.dispatch_at = datetime.utcnow()
     db_session.commit()
@@ -114,15 +134,16 @@ def backend_submit_testrun():
     r = db_session.query(TestRun).filter(TestRun.id == id).one()
     r.finished_at = datetime.utcnow()
     r.running_time = running_time
-    r.status = 'ok' if status == 'ok' else 'failed'
+    r.status = status
     db_session.commit()
-    with open(os.path.join(CORE_TESTRUN_STDERR_PATH, '{:d}.txt'.format(id)), 'w') as f:
+    path = os.path.join(settings.CORE_TESTRUN_STDERR_PATH, '{:d}.txt'.format(id))
+    with open(path, 'w') as f:
         f.write(stderr)
     return jsonify({'ack': True})
 
 
-@app.route(settings.WEBROOT + '/backend/download/testcase/<int:id>')
+@app.route(settings.WEBROOT + '/backend/download/testcase/<int:id>.json', methods=['POST'])
 @token_required
-def download_testcase(id):
+def backend_download_testcase(id):
     t = db_session.query(Testcase).filter(Testcase.id == id).one()
     return Response(t.content, mimetype='application/json')

@@ -3,11 +3,14 @@
 from __future__ import print_function, division, unicode_literals
 import os
 import sys
+import time
+import json
 import hashlib
 import StringIO
 from datetime import datetime
 
 import utils
+import settings
 from models import *
 from database import db_session, init_db
 
@@ -16,7 +19,7 @@ def initdb():
     key = hashlib.md5(str(key)).hexdigest()[:6]
     if len(sys.argv) != 3 or sys.argv[2] != key:
         print('please run the following command within the current minute')
-        print('    python maintenance.py initdb %s' % key)
+        print('    ./maintenance.py initdb %s' % key)
         sys.exit(1)
     print('initializing the database')
     init_db()
@@ -27,7 +30,7 @@ def add_compiler():
     if len(sys.argv) != 4:
         print('usage: ./maintenance.py add_compiler <student> <repo_url>')
         sys.exit(1)
-    student = sys.argv[2]
+    student = sys.argv[2].decode('utf-8')
     repo_url = sys.argv[3]
     c = Compiler(student=student, repo_url=repo_url)
     db_session.add(c)
@@ -49,6 +52,8 @@ def add_testcase():
     
     t = {}
     t['program'] = read_until_end('program')
+    timeout = raw_input('timeout (in seconds): ')
+    t['timeout'] = float(timeout)
     asserts = ['success_exit', 'failure_exit', 'exitcode', 'output']
     t['assert'] = raw_input('assert ({}): '.format(' / '.join(asserts)))
     assert t['assert'] in asserts

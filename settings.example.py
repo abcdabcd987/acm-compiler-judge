@@ -13,6 +13,7 @@ TEST_PHASES = [
     'codegen pretest', 'codegen extended',
     'optimization pretest', 'optimization extended'
 ]
+ARCHIVED = False
 CORE_URL = ''
 CORE_BUILD_LOG_PATH = ''
 CORE_TESTRUN_STDERR_PATH = ''
