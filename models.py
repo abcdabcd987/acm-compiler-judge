@@ -36,6 +36,9 @@ class Testcase(Base):
     is_public = Column(Boolean, nullable=False)
     comment = Column(Text, nullable=False)
     content = Column(Text, nullable=False)
+    cnt_run = Column(Integer, nullable=False)
+    cnt_hack = Column(Integer, nullable=False)
+    timeout = Column(Float, nullable=False)
 
 class TestRun(Base):
     __tablename__ = 'testruns'

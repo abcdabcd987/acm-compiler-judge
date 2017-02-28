@@ -1,0 +1,34 @@
+.navbar-static-top {
+  margin-bottom: 19px;
+}
+
+.monospace {
+    font-family: monospace;
+}
+
+.invisible {
+    display: none;
+}
+
+.tooltip-inner {
+    text-align: left;
+}
+
+.disabled-row {
+    background-color: #f9f9f9;
+}
+
+.disabled-row,
+.disabled-row a {
+    color: #a0a0a0;
+}
+
+.label-phase-0 { background-color: #777777; }
+.label-phase-1 { background-color: #d88274; }
+.label-phase-2 { background-color: #d8c274; }
+.label-phase-3 { background-color: #add874; }
+.label-phase-4 { background-color: #74d8c6; }
+.label-phase-5 { background-color: #74a5d8; }
+.label-phase-6 { background-color: #9174d8; }
+.label-phase-7 { background-color: #da7ae0; }
+.label-building { background-color: #403838; }

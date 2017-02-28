@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% block title %}Compiler List{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Compiler List</h1>
+</div>
+
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Student</th>
+            <th>Repository URL</th>
+            <th>Latest Build</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for c, v in zip(compilers, versions) %}
+        <tr>
+            <td>{{c.id}}</td>
+            <td>{{c.student}}</td>
+            <td class="monospace">{{c.repo_url}}</td>
+            <td>{% if v %}<a href="{{url_for('build', id=v.id)}}" class="monospace" data-toggle="tooltip" data-placement="right" title="{{v.message | nl2monobr}}">{{v.sha[:8]}}</a> ({{v.committed_at | format_from_utc}}){% endif %}</td>
+            <td><a href="{{url_for('builds', compiler_id=c.id)}}">(See builds)</a></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

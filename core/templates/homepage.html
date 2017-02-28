@@ -1,0 +1,9 @@
+{% extends "layout.html" %}
+{% block title %}Homepage{% endblock %}
+{% block content %}
+<div class="jumbotron">
+    <h1>{{homepage_title | safe}}</h1>
+    {{homepage_description | safe}}
+</div>
+
+{% endblock %}

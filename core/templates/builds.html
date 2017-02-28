@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% block title %}Build List{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Build List</h1>
+</div>
+
+<form class="form-inline" method="get" action="{{url_for('builds')}}">
+    <input type="text" class="form-control monospace" name="sha" placeholder="SHA startswith" autocomplete="off">
+    <select class="form-control monospace" name="phase">
+        <option value="">--Phase--</option>
+        {% for p in test_phases -%}
+        <option>{{p}}</option>
+        {%- endfor %}
+        <option>end</option>
+    </select>
+    <select class="form-control monospace" name="status">
+        <option value="">--Status--</option>
+        <option>passed</option>
+        <option>failed</option>
+        <option>pending</option>
+        <option>running</option>
+        <option>building</option>
+    </select>
+    <button type="submit" class="btn btn-default">Filter</button>
+</form>
+
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>SHA</th>
+            <th>Phase</th>
+            <th>Status</th>
+            <th>Commit Date</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for v, cnt in zip(versions, counts) %}
+        <tr>
+            <td><a href="{{ url_for('builds', start=v.id, compiler_id=request.args.get('compiler_id'), sha=request.args.get('sha'), phase=request.args.get('phase'), status=request.args.get('status')) }}">{{v.id}}</a></td>
+            <td><a href="{{url_for('build', id=v.id)}}" class="monospace" data-toggle="tooltip" data-placement="right" title="{{v.message | nl2monobr}}">{{v.sha[:8]}}</a></td>
+            <td><span class="label label-phase-{{v.phase | phase_to_index}}" data-toggle="tooltip" data-placement="right" title="{{cnt | version_count_tooltip | nl2monobr}}">{{v.phase}}</span></td>
+            <td><span class="label label-{{v.status | label_class}}">{{v.status}}</span></td>
+            <td>{{v.committed_at | format_from_utc}}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

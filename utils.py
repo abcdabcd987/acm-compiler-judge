@@ -32,6 +32,54 @@ def nl2p(text):
     return ''.join("<p>%s</p>" % line for line in text.splitlines() if line)
 
 
+def nl2monobr(text):
+    return '<div style="font-family: monospace">' + '<br>'.join(text.splitlines()) + '</div>'
+
+
+def multiline_indent(text, indent='    '):
+    return '\n'.join([indent + line for line in text.splitlines()])
+
+
+def testcase_tooltip(testcase):
+    pr = 100.0 - testcase.cnt_hack * 100.0 / testcase.cnt_run if testcase.cnt_run else 0.0
+    return '''=== Testcase {0.id} ===
+enabled: {0.enabled}
+phase: {0.phase}
+timeout: {0.timeout:.3f}s
+hack/run: {0.cnt_hack}/{0.cnt_run}
+pass rate: {1:.1f}%
+comment:
+{2}'''.format(testcase, pr, multiline_indent(testcase.comment, indent='&nbsp;&nbsp;&nbsp;&nbsp;'))
+
+
+def label_class(status):
+    return {
+        'passed': 'success',
+        'failed': 'danger',
+        'timeout': 'warning',
+        'building': 'building',
+        'running': 'info',
+    }.get(status, 'default')
+
+
+def phase_to_index(phase):
+    return (['build'] + settings.TEST_PHASES + ['end']).index(phase)
+
+
+def version_count_tooltip(cnt):
+    sio = StringIO.StringIO()
+    sio.write('build: ')
+    sio.write('passed' if cnt['build'] else 'failed')
+    sio.write('\n')
+    for phase in settings.TEST_PHASES:
+        sio.write(phase)
+        sio.write(': ')
+        c = cnt[phase]
+        sio.write('{}/{}'.format(c[0], c[1]) if c else 'n/a')
+        sio.write('\n')
+    return sio.getvalue()
+
+
 def normalize_nl(text):
     return '\n\n'.join(line for line in text.splitlines() if line)
 

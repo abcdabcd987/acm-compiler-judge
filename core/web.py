@@ -6,13 +6,22 @@ import datetime
 import models, database, settings, utils
 
 app = Flask(__name__, static_url_path=settings.WEBROOT + '/static')
-app.secret_key = settings.FLASK_SECRET_KEY
 app.jinja_env.filters['format_from_utc'] = utils.format_from_utc
 app.jinja_env.filters['nl2p'] = utils.nl2p
+app.jinja_env.filters['nl2monobr'] = utils.nl2monobr
+app.jinja_env.filters['multiline_indent'] = utils.multiline_indent
+app.jinja_env.filters['testcase_tooltip'] = utils.testcase_tooltip
+app.jinja_env.filters['label_class'] = utils.label_class
+app.jinja_env.filters['phase_to_index'] = utils.phase_to_index
+app.jinja_env.filters['version_count_tooltip'] = utils.version_count_tooltip
 app.jinja_env.globals.update(datetime=datetime.datetime)
 app.jinja_env.globals.update(len=len)
 app.jinja_env.globals.update(max=max)
 app.jinja_env.globals.update(zip=zip)
+app.jinja_env.globals.update(website_name=settings.WEBSITE_NAME)
+app.jinja_env.globals.update(test_phases=settings.TEST_PHASES)
+app.jinja_env.globals.update(homepage_title=settings.HOMEPAGE_TITLE)
+app.jinja_env.globals.update(homepage_description=settings.HOMEPAGE_DESCRIPTION)
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):

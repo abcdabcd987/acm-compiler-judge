@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+{% block title %}Testcase List{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Testcase List</h1>
+</div>
+
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Enabled</th>
+            <th>Phase</th>
+            <th>Timeout</th>
+            <th>Download</th>
+            <th>Run</th>
+            <th>Hack</th>
+            <th>Pass%</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for t in testcases %}
+        <tr class="{% if not t.enabled %}disabled-row{% endif %}">
+            <td><a class="monospace" data-toggle="tooltip" data-placement="right" title="{{t.comment | nl2monobr}}">T{{t.id}}</a></td>
+            <td><input type="checkbox" {% if t.enabled %}checked{% endif %} disabled></td>
+            <td>{{t.phase}}</td>
+            <td>{{'{:.3f}s'.format(t.timeout)}}
+            <td>{% if t.is_public %}<a href="{{url_for('download_testcase', id=t.id)}}">Download</a>{% else %}Not Available{% endif %}</td>
+            <td>{{t.cnt_run}}</td>
+            <td>{{t.cnt_hack}}</td>
+            <td>{% if t.cnt_run == 0 %}0.0%{% else %}{{'{:.1f}%'.format(100.0 - t.cnt_hack * 100.0 / t.cnt_run)}}{% endif %}</td>
+            <td>(See Runs)</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
