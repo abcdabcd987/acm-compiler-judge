@@ -1,5 +1,5 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, Text, Float, TIMESTAMP, Boolean, LargeBinary
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, deferred
 from database import Base, db_session
 
 class Compiler(Base):
@@ -34,11 +34,11 @@ class Testcase(Base):
     enabled = Column(Boolean, nullable=False)
     phase = Column(String, nullable=False)
     is_public = Column(Boolean, nullable=False)
+    timeout = Column(Float, nullable=False)
     comment = Column(Text, nullable=False)
-    content = Column(Text, nullable=False)
+    content = deferred(Column(Text, nullable=False))
     cnt_run = Column(Integer, nullable=False)
     cnt_hack = Column(Integer, nullable=False)
-    timeout = Column(Float, nullable=False)
 
 class TestRun(Base):
     __tablename__ = 'testruns'
@@ -48,7 +48,8 @@ class TestRun(Base):
     phase = Column(String, nullable=False)
     status = Column(String, nullable=False)
     created_at = Column(TIMESTAMP, nullable=False)
+    running_time = Column(Float)
+    compile_time = Column(Float)
     dispatched_to = Column(String)
     dispatched_at = Column(TIMESTAMP)
     finished_at = Column(TIMESTAMP)
-    running_time = Column(Float)

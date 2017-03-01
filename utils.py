@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import re
 import time
 import pytz
 import StringIO
@@ -10,6 +11,7 @@ import settings
 
 
 def format_from_utc(dt):
+    if not dt: return ''
     dt = settings.TIMEZONE.fromutc(dt.replace(tzinfo=settings.TIMEZONE))
     return dt.strftime('%Y-%m-%d %H:%M:%S')
 
@@ -33,10 +35,12 @@ def nl2p(text):
 
 
 def nl2monobr(text):
+    if not text: return ''
     return '<div style="font-family: monospace">' + '<br>'.join(text.splitlines()) + '</div>'
 
 
 def multiline_indent(text, indent='    '):
+    if not text: return ''
     return '\n'.join([indent + line for line in text.splitlines()])
 
 
@@ -69,7 +73,7 @@ def phase_to_index(phase):
 def version_count_tooltip(cnt):
     sio = StringIO.StringIO()
     sio.write('build: ')
-    sio.write('passed' if cnt['build'] else 'failed')
+    sio.write(cnt['build'])
     sio.write('\n')
     for phase in settings.TEST_PHASES:
         sio.write(phase)
@@ -87,38 +91,47 @@ def normalize_nl(text):
 def testcase_to_text(t):
     sio = StringIO.StringIO()
     print >> sio, t['program']
-    print >> sio, '\n/* metadata:'
+    print >> sio, '\n/*!! metadata:'
     for key, value in t.iteritems():
         if key != 'program':
             print >> sio, '=== {} ==='.format(key)
             print >> sio, value
-    print >> sio, '\n*/\n'
+    print >> sio, '\n!!*/\n'
     return sio.getvalue()
 
 
-# def parse_testcase(content):
-#     t = {}
-#     t['raw'] = content
-#     starting = '/*#!>'
-#     lines = content.splitlines()
-#     for i, line in enumerate(lines):
-#         if line.strip() == starting:
-#             break
-#     t['content'] = '\n'.join(lines[:i])
+def parse_testcase(content):
+    meta_start = '/*!! metadata:'
+    meta_end = '!!*/'
+    lines = content.splitlines()
+    for i, line in enumerate(lines):
+        if line.strip() == meta_start:
+            break
+    t = {'program': '\n'.join(lines[:i])}
+    key_pattern = re.compile('===(.*?)===')
+    key, st = None, i+1
+    for i, line in enumerate(lines[i+1:], start=i+1):
+        stripped = lines[i].strip()
+        match = key_pattern.match(stripped)
+        if (match or stripped == meta_end) and key:
+            value = '\n'.join(lines[st:i])
+            t[key] = value.strip()
+        if match:
+            key = match.group(1).strip()
+            st = i+1
+        elif stripped == meta_end:
+            break
+    t['timeout'] = float(t['timeout'])
+    assert t['assert'] in ['success_exit', 'failure_exit', 'exitcode', 'output']
+    if t['assert'] == 'exitcode':
+        t['exitcode'] = int(t['exitcode'])
+        assert 0 <= t['exitcode'] <= 255
+    elif t['assert'] == 'output':
+        assert 'output' in t
+    assert 'input' in t
+    assert t['phase'] in settings.TEST_PHASES
+    assert 'comment' in t
+    assert t['is_public'] in ['True', 'False']
+    t['is_public'] = t['is_public'] == 'True'
 
-#     i += 1
-#     while i < len(lines):
-#         key, value = lines[i].split(': ', 1)
-#         if value.startswith('<<<'):
-#             j = i+1
-#             while not lines[j].startswith('>>>'):
-#                 j += 1
-#             t[key] = '\n'.join(lines[i+1:j])
-#             i = j+1
-#         else:
-#             t[key] = value.strip()
-#             i += 1
-
-#     t['timeout'] = float(t['timeout'])
-#     return t
-
+    return t

@@ -60,6 +60,7 @@ def main():
         for version in versions:
             if version.phase in settings.TEST_PHASES:
                 handler[version.status](version)
+        db_session.commit()
         time.sleep(1)
 
 

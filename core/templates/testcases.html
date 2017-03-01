@@ -30,7 +30,7 @@
             <td>{{t.cnt_run}}</td>
             <td>{{t.cnt_hack}}</td>
             <td>{% if t.cnt_run == 0 %}0.0%{% else %}{{'{:.1f}%'.format(100.0 - t.cnt_hack * 100.0 / t.cnt_run)}}{% endif %}</td>
-            <td>(See Runs)</td>
+            <td><a href="{{url_for('runs', testcase_id=t.id)}}">(See Runs)</a></td>
         </tr>
     {% endfor %}
     </tbody>

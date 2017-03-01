@@ -2,7 +2,10 @@
 {% block title %}Build {{version.sha[:8]}} of {{compiler.student}}{% endblock %}
 {% block content %}
 <div class="page-header">
-    <h1>Build <span class="monospace">{{version.sha[:8]}}</span> <small>of {{compiler.student}}</small></h1>
+    <h1>
+        Build <span class="monospace">{{version.sha[:8]}}</span>
+        <small>of {{compiler.student}}</small>
+    </h1>
 </div>
 
 <div class="row">
@@ -13,14 +16,20 @@ Date:    {{version.committed_at | format_from_utc}}
 Message:
 {{version.message | multiline_indent}}
 </pre>
-    </div>
-    <div class="col-md-6">
 <h2>Build Logs</h2>
 <div class="list-group">
 {% for l in build_logs %}
     <a href="{{url_for('download_buildlog', id=l.id)}}" class="list-group-item">{{'{:.3f}s'.format(l.build_time)}} elapsed, built by <span class="monospace">{{l.builder}}</span> at {{l.created_at | format_from_utc}}</a>
 {% endfor %}
 </div>
+    </div>
+    <div class="col-md-6">
+<h2>Status</h2>
+<p>
+<span class="label label-phase-{{version.phase | phase_to_index}}">{{version.phase}}</span>
+<span class="label label-{{version.status | label_class}}">{{version.status}}</span>
+</p>
+<pre>{{count | version_count_tooltip | nl2monobr | safe}}</pre>
     </div>
 </div>
 
@@ -33,6 +42,7 @@ Message:
             <th>Testcase</th>
             <th>Phase</th>
             <th>Status</th>
+            <th>Compile</th>
             <th>Run Time</th>
         </tr>
     </thead>
@@ -43,8 +53,9 @@ Message:
             <td>{{r.id}}</td>
             <td><a {% if t.is_public %} href="{{url_for('download_testcase', id=r.testcase_id)}}"{% endif %} class="monospace" data-toggle="tooltip" data-placement="right" title="{{t | testcase_tooltip | nl2monobr}}">T{{r.testcase_id}}</a></td>
             <td><span class="label label-phase-{{t.phase | phase_to_index}}">{{r.phase}}</span></td>
-            <td><span class="label label-{{r.status | label_class}}">{{r.status}}</span></td>
-            <td>{{'{:.3f}s'.format(r.running_time)}} / {{'{:.3f}s'.format(t.timeout)}}</td>
+            <td><a href="{{url_for('download_runlog', id=r.id)}}"><span class="label label-{{r.status | label_class}}">{{r.status}}</span></a></td>
+            <td>{% if r.compile_time %}{{'{:.3f}s'.format(r.compile_time)}}{% endif %}</td>
+            <td>{% if r.running_time %}{{'{:.3f}s'.format(r.running_time)}} / {{'{:.3f}s'.format(t.timeout)}}{% endif %}</td>
         </tr>
     {% endfor -%}
     </tbody>

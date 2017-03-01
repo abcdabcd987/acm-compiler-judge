@@ -51,6 +51,7 @@ def main():
         compilers = db_session.query(Compiler)
         for compiler in compilers:
             do_compiler(compiler)
+        db_session.commit()
         time.sleep(1)
 
 

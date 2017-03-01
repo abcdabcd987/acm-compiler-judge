@@ -39,46 +39,22 @@ def add_compiler():
 
 
 def add_testcase():
-    end_token = 'END'
-    def read_until_end(prompt):
-        sio = StringIO.StringIO()
-        print(prompt, '(END to mark the end):')
-        while True:
-            line = raw_input()
-            if line == end_token:
-                break
-            print(line, file=sio)
-        return sio.getvalue()
-    
-    t = {}
-    t['program'] = read_until_end('program')
-    timeout = raw_input('timeout (in seconds): ')
-    t['timeout'] = float(timeout)
-    asserts = ['success_exit', 'failure_exit', 'exitcode', 'output']
-    t['assert'] = raw_input('assert ({}): '.format(' / '.join(asserts)))
-    assert t['assert'] in asserts
-    if t['assert'] == 'exitcode':
-        t['exitcode'] = int(raw_input('exitcode (0~255): '))
-        assert 0 <= t['exitcode'] <= 255
-    elif t['assert'] == 'output':
-        t['output'] = read_until_end('output')
-    t['input'] = read_until_end('input')
-    t['phase'] = raw_input('phase ({}): '.format(' / '.join(settings.TEST_PHASES))).strip()
-    assert t['phase'] in settings.TEST_PHASES
-    t['comment'] = read_until_end('comment')
-    is_public = raw_input('is public? (y/n): ')
-    assert is_public in ['y', 'n']
-    t['is_public'] = is_public == 'y'        
-
-    text = utils.testcase_to_text(t)
-    print(text)
-    yes = raw_input('confirm? (y/n): ')
-    assert yes == 'y'
-
+    if len(sys.argv) != 3:
+        print('usage: ./maintenance.py add_testcase <path_to_testcase>')
+        sys.exit(1)
+    with open(sys.argv[2]) as f:
+        content = f.read()
+    t = utils.parse_testcase(content)
+    print(utils.testcase_to_text(t))
+    confirm = raw_input('Confirm (y/n)? ')
+    assert confirm.strip() == 'y'
     testcase = Testcase(enabled=True,
                         phase=t['phase'],
                         is_public=t['is_public'],
                         comment=t['comment'],
+                        timeout=t['timeout'],
+                        cnt_run=0,
+                        cnt_hack=0,
                         content=json.dumps(t))
     db_session.add(testcase)
     db_session.commit()
@@ -98,8 +74,30 @@ def set_testcase():
     print('done!')
 
 
+def rejudge_version():
+    if len(sys.argv) != 3:
+        print('usage: ./maintenance.py rejudge_version <version_id>')
+        sys.exit(1)
+    version_id = int(sys.argv[2])
+    old = db_session.query(Version).filter(Version.id == version_id).one()
+    compiler = db_session.query(Compiler).filter(Compiler.id == old.compiler_id).one()
+    new = Version(compiler_id=old.compiler_id,
+                  sha=old.sha,
+                  phase='build',
+                  status='pending')
+    db_session.add(new)
+    db_session.commit()
+    compiler.latest_version_id = new.id
+    db_session.commit()
+    print('done! the new version_id is', new.id)
+
+
+def clear_judge_testcase_cache():
+    os.system('rm {}/*'.format(settings.JUDGE_TESTCASE_PATH))
+
+
 if __name__ == '__main__':
-    actions = [initdb, add_compiler, add_testcase, set_testcase]
+    actions = [initdb, add_compiler, add_testcase, set_testcase, clear_judge_testcase_cache, rejudge_version]
     action_map = {func.__name__: func for func in actions}
     if len(sys.argv) < 2 or sys.argv[1] not in action_map:
         print('usage: ./maintenance.py <action>')

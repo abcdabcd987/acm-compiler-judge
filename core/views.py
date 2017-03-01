@@ -47,7 +47,7 @@ def get_verion_testrun_counts(version):
         if r.status == 'passed':
             passed[r.phase] += 1
     ret = {p: (passed[p], total[p]) if total[p] else None for p in settings.TEST_PHASES}
-    ret['build'] = version.phase != 'build'
+    ret['build'] = 'passed' if version.phase != 'build' else version.status
     return ret
 
 
@@ -92,8 +92,11 @@ def runs():
     if start: query = query.filter(TestRun.id <= start)
     query = query.limit(settings.RUNS_PER_PAGE)
     rs = query.all()
+    vids = set(r.version_id for r in rs)
+    vs = {v.id: v for v in db_session.query(Version).filter(Version.id.in_(vids))}
+    cs = {c.id: c for c in db_session.query(Compiler)}
     ts = {t.id: t for t in db_session.query(Testcase)}
-    return render_template('runs.html', testruns=rs, testcases=ts)
+    return render_template('runs.html', testruns=rs, testcases=ts, compilers=cs, versions=vs)
 
 
 @app.route(settings.WEBROOT + '/testcases')
@@ -111,11 +114,12 @@ def build(id):
     ls = db_session.query(BuildLog).filter(BuildLog.version_id == id).order_by(BuildLog.id.desc()).all()
     rs = db_session.query(TestRun).filter(TestRun.version_id == id).order_by(TestRun.id.desc()).all()
     ts = {t.id: t for t in db_session.query(Testcase)}
-    return render_template('build.html', compiler=c, version=v, build_logs=ls, testruns=rs, testcases=ts)
+    count = get_verion_testrun_counts(v)
+    return render_template('build.html', compiler=c, version=v, build_logs=ls, testruns=rs, testcases=ts, count=count)
 
 
 
-@app.route(settings.WEBROOT + '/download/buildlog_<int:id>.html')
+@app.route(settings.WEBROOT + '/show/buildlog_<int:id>.html')
 def download_buildlog(id):
     l = db_session.query(BuildLog).filter(BuildLog.id == id).first()
     if not l:
@@ -127,6 +131,20 @@ def download_buildlog(id):
         text = f.read()
     html = ansi2html(text, palette='console')
     return render_template('buildlog.html', log=html, buildlog=l)
+
+
+@app.route(settings.WEBROOT + '/show/runlog_<int:id>.html')
+def download_runlog(id):
+    r = db_session.query(TestRun).filter(TestRun.id == id).first()
+    if not r:
+        return abort(404)
+    path = os.path.join(settings.CORE_TESTRUN_STDERR_PATH, '{:d}.txt'.format(r.id))
+    if not os.path.exists(path):
+        return abort(404)
+    with open(path) as f:
+        text = f.read()
+    html = ansi2html(text, palette='console')
+    return render_template('runlog.html', log=html, testrun=r)
 
 
 @app.route(settings.WEBROOT + '/download/testcase_<int:id>.txt')
@@ -174,23 +192,17 @@ def backend_dispatch_build():
 @token_required
 def backend_submit_build_log():
     id = int(request.form['id'])
-    print id
     judge = request.form['judge']
-    print judge
     message = request.form['message']
-    print message
     committed_at = utils.parse_to_utc(request.form['committed_at'])
-    print committed_at
     status = request.form['status']
-    print status
     build_time = float(request.form['build_time'])
-    print build_time
     log = request.form['log']
-    print log
 
     version = db_session.query(Version).filter(Version.id == id).one()
     build_log = BuildLog(version_id=version.id,
                          build_time=build_time,
+                         builder=judge,
                          created_at=datetime.utcnow())
     db_session.add(build_log)
     db_session.commit()
@@ -238,12 +250,18 @@ def backend_submit_testrun():
     judge = request.form['judge']
     status = request.form['status']
     running_time = float(request.form['running_time'])
+    compile_time = float(request.form['compile_time'])
     stderr = request.form['stderr']
 
     r = db_session.query(TestRun).filter(TestRun.id == id).one()
+    t = db_session.query(Testcase).filter(Testcase.id == r.testcase_id).one()
     r.finished_at = datetime.utcnow()
     r.running_time = running_time
+    r.compile_time = compile_time
     r.status = status
+    t.cnt_run = Testcase.cnt_run + 1
+    if status == 'passed':
+        t.cnt_hack = Testcase.cnt_hack + 1
     db_session.commit()
     path = os.path.join(settings.CORE_TESTRUN_STDERR_PATH, '{:d}.txt'.format(id))
     with open(path, 'w') as f:
