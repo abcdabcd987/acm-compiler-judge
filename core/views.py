@@ -70,7 +70,8 @@ def builds():
     query = query.limit(settings.BUILDS_PER_PAGE)
     versions = query.all()
     counts = [get_verion_testrun_counts(v) for v in versions]
-    return render_template('builds.html', versions=versions, counts=counts)
+    cs = {c.id: c for c in db_session.query(Compiler)}
+    return render_template('builds.html', versions=versions, compilers=cs, counts=counts)
 
 
 @app.route(settings.WEBROOT + '/runs')
@@ -85,6 +86,7 @@ def runs():
     status = request.args.get('status', '')
 
     query = db_session.query(TestRun).order_by(TestRun.id.desc())
+    auto_refresh = not (version_id or testcase_id or phase or status or start)
     if version_id: query = query.filter(TestRun.version_id == version_id)
     if testcase_id: query = query.filter(TestRun.testcase_id == testcase_id)
     if phase: query = query.filter(TestRun.phase == phase)
@@ -96,7 +98,70 @@ def runs():
     vs = {v.id: v for v in db_session.query(Version).filter(Version.id.in_(vids))}
     cs = {c.id: c for c in db_session.query(Compiler)}
     ts = {t.id: t for t in db_session.query(Testcase)}
-    return render_template('runs.html', testruns=rs, testcases=ts, compilers=cs, versions=vs)
+    watch_list = [r.id for r in rs if r.status not in ['passed', 'failed', 'timeout']]
+    return render_template('runs.html', testruns=rs, testcases=ts, compilers=cs, versions=vs,
+        auto_refresh=auto_refresh, watch_list=watch_list)
+
+
+# def render_phase_string(r):
+#     idx = utils.phase_to_index(r.phase)
+#     return '<span class="label label-phase-{}">{}</span>'.format(r.phase, idx)
+# def render_status_string(r):
+#     url = url_for('download_runlog', id=r.id)
+#     lc = utils.label_class(r.status)
+#     return '<a href="{}"><span class="label label-{}">{}</span></a>'.format(url, lc, r.status)
+# def render_compile_string(r):
+#     return '{:.3f}s'.format(r.compile_time) if r.compile_time else ''
+# def render_runtime_string(r, t):
+#     return '{:.3f}s / {:.3f}s'.format(r.running_time, t.timeout) if r.compile_time else ''
+# def render_sha_build_string(v):
+#     url = url_for('build', id=v.id)
+#     title = utils.nl2monobr(v.message)
+#     return '''<a href="{}" class="monospace" title="{}" data-toggle="tooltip"
+# data-placement="right">{}</a> ({})'''.format(url, title, v.sha[:8], v.id)
+# def render_testcase_string(r, t):
+#     url = url_for('runs', testcase_id=r.testcase_id)
+#     title = utils.nl2monobr(utils.testcase_tooltip(t))
+#     return '''<a href="{}" class="monospace" data-toggle="tooltip" data-placement="right"
+# title="{}">T{}</a>'''.format(url, title, r.testcase_id)
+
+
+@app.route(settings.WEBROOT + '/ajax/watch_runs.json')
+def ajax_watch_runs():
+    # try:
+    lim = 10
+    stamp = int(request.args['stamp'])
+    qs = request.args.get('q', '').strip()
+    qs = map(lambda q: int(q.strip()), qs.split(','))[:lim] if qs else []
+    old = []
+    for testrun_id in qs:
+        r = db_session.query(TestRun).filter(TestRun.id == testrun_id).one()
+        v = db_session.query(Version).filter(Version.id == r.version_id).one()
+        c = db_session.query(Compiler).filter(Compiler.id == v.compiler_id).one()
+        t = db_session.query(Testcase).filter(Testcase.id == r.testcase_id).one()
+        old.append({
+            'id': r.id,
+            'row_html': render_template('runs_row.html', r=r, v=v, c=c, t=t),
+            'finished': r.status in ['passed', 'failed', 'timeout'],
+        })
+
+    try: latest_id = int(request.args['latest_id'])
+    except: latest_id = 1<<30
+    query = db_session.query(TestRun).filter(TestRun.id > latest_id)\
+                      .order_by(TestRun.id.asc()).limit(lim)
+    new = []
+    for r in query:
+        v = db_session.query(Version).filter(Version.id == r.version_id).one()
+        c = db_session.query(Compiler).filter(Compiler.id == v.compiler_id).one()
+        t = db_session.query(Testcase).filter(Testcase.id == r.testcase_id).one()
+        new.append({
+            'id': r.id,
+            'row_html': render_template('runs_row.html', r=r, v=v, c=c, t=t),
+            'finished': r.status in ['passed', 'failed', 'timeout'],
+        })
+    return jsonify({'watch': old, 'new': new, 'stamp': stamp})
+    # except:
+    #     return abort(400)
 
 
 @app.route(settings.WEBROOT + '/testcases')
@@ -260,7 +325,7 @@ def backend_submit_testrun():
     r.compile_time = compile_time
     r.status = status
     t.cnt_run = Testcase.cnt_run + 1
-    if status == 'passed':
+    if status != 'passed':
         t.cnt_hack = Testcase.cnt_hack + 1
     db_session.commit()
     path = os.path.join(settings.CORE_TESTRUN_STDERR_PATH, '{:d}.txt'.format(id))

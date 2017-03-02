@@ -1,0 +1,10 @@
+<tr data-id="{{r.id}}">
+    <td data-field="id"><a href="{{ url_for('runs', start=r.id, build_id=request.args.get('build_id'), testcase_id=request.args.get('testcase_id'), phase=request.args.get('phase'), status=request.args.get('status')) }}">{{r.id}}</a></td>
+    <td data-field="student">{{c.student}}</td>
+    <td data-field="sha"><a href="{{url_for('build', id=v.id)}}" class="monospace" data-toggle="tooltip" data-placement="right" title="{{v.message | nl2monobr}}">{{v.sha[:8]}}</a> ({{v.id}})</td>
+    <td data-field="testcase"><a href="{{url_for('runs', testcase_id=r.testcase_id)}}" class="monospace" data-toggle="tooltip" data-placement="right" title="{{t | testcase_tooltip | nl2monobr}}">T{{r.testcase_id}}</a></td>
+    <td data-field="phase"><span class="label label-phase-{{t.phase | phase_to_index}}">{{r.phase}}</span></td>
+    <td data-field="status"><a href="{{url_for('download_runlog', id=r.id)}}"><span class="label label-{{r.status | label_class}}">{{r.status}}</span></a></td>
+    <td data-field="compile">{% if r.compile_time %}{{'{:.3f}s'.format(r.compile_time)}}{% endif %}</td>
+    <td data-field="runtime">{% if r.running_time %}{{'{:.3f}s'.format(r.running_time)}} / {{'{:.3f}s'.format(t.timeout)}}{% endif %}</td>
+</tr>

@@ -58,6 +58,21 @@ def add_testcase():
                         content=json.dumps(t))
     db_session.add(testcase)
     db_session.commit()
+
+    tphase = utils.phase_to_index(testcase.phase)
+    for compiler in db_session.query(Compiler):
+        version = db_session.query(Version).filter(Version.id == compiler.latest_version_id).one()
+        vphase = utils.phase_to_index(version.phase)
+        if vphase > tphase or (vphase == tphase and version.status != 'pending'):
+            r = TestRun(version_id=version.id,
+                        testcase_id=testcase.id,
+                        phase=testcase.phase,
+                        status='pending',
+                        created_at=datetime.utcnow())
+            db_session.add(r)
+            version.phase = testcase.phase
+            version.status = 'running'
+    db_session.commit()
     print('done!')
 
 

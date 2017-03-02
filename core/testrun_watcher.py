@@ -13,17 +13,23 @@ from models import *
 
 def do_pending(version):
     print 'add testrun for version {0.id}, phase {0.phase}, status {0.status}'.format(version)
-    version.status = 'running'
+    query = db_session.query(TestRun)\
+                      .filter(TestRun.version_id == version.id)\
+                      .filter(TestRun.phase == version.phase)
+    presented = set(r.testcase_id for r in query)
+
     testcases = db_session.query(Testcase)\
                           .filter(Testcase.enabled == True)\
                           .filter(Testcase.phase == version.phase)
     for testcase in testcases:
-        r = TestRun(version_id=version.id,
-                    testcase_id=testcase.id,
-                    phase=version.phase,
-                    status='pending',
-                    created_at=datetime.utcnow())
-        db_session.add(r)
+        if testcase.id not in presented:
+            r = TestRun(version_id=version.id,
+                        testcase_id=testcase.id,
+                        phase=testcase.phase,
+                        status='pending',
+                        created_at=datetime.utcnow())
+            db_session.add(r)
+    version.status = 'running'
     db_session.commit()
 
 

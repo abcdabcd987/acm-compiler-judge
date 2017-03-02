@@ -29,6 +29,7 @@
     <thead>
         <tr>
             <th>#</th>
+            <th>Student</th>
             <th>SHA</th>
             <th>Phase</th>
             <th>Status</th>
@@ -37,12 +38,14 @@
     </thead>
     <tbody>
     {% for v, cnt in zip(versions, counts) %}
+        {%- set c = compilers[v.compiler_id] -%}
         <tr>
             <td><a href="{{ url_for('builds', start=v.id, compiler_id=request.args.get('compiler_id'), sha=request.args.get('sha'), phase=request.args.get('phase'), status=request.args.get('status')) }}">{{v.id}}</a></td>
+            <td>{{c.student}}</td>
             <td><a href="{{url_for('build', id=v.id)}}" class="monospace" data-toggle="tooltip" data-placement="right" title="{{v.message | nl2monobr}}">{{v.sha[:8]}}</a></td>
             <td><span class="label label-phase-{{v.phase | phase_to_index}}" data-toggle="tooltip" data-placement="right" title="{{cnt | version_count_tooltip | nl2monobr}}">{{v.phase}}</span></td>
-            <td><a href="{{url_for('build', id=v.id)}}" class="monospace" data-toggle="tooltip" data-placement="right" title="{{v.message | nl2monobr}}"><span class="label label-{{v.status | label_class}}">{{v.status}}</span></a></td>
-            <td>{{v.committed_at | format_from_utc}}
+            <td><span class="label label-{{v.status | label_class}}">{{v.status}}</span></td>
+            <td>{{v.committed_at | format_from_utc}}</td>
         </tr>
     {% endfor %}
     </tbody>

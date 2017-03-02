@@ -47,12 +47,11 @@ def do_compiler(compiler):
 
 def main():
     print 'repo_watcher started'
+    compilers = db_session.query(Compiler).all()
     while True:
-        compilers = db_session.query(Compiler)
         for compiler in compilers:
             do_compiler(compiler)
-        db_session.commit()
-        time.sleep(1)
+            time.sleep(1)
 
 
 if __name__ == '__main__':

@@ -3,6 +3,12 @@
 {% block content %}
 <div class="page-header">
     <h1>Run List</h1>
+    {% if auto_refresh %}
+    <p>
+        <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
+        Auto-refresh is enabled on this page.
+    </p>
+    {% endif %}
 </div>
 
 <form class="form-inline" method="get" action="{{url_for('runs')}}">
@@ -25,7 +31,7 @@
     <button type="submit" class="btn btn-default">Filter</button>
 </form>
 
-<table class="table table-striped table-hover table-condensed">
+<table id="run-table" class="table table-striped table-hover table-condensed">
     <thead>
         <tr>
             <th>#</th>
@@ -43,18 +49,23 @@
         {%- set t = testcases[r.testcase_id] -%}
         {%- set v = versions[r.version_id] -%}
         {%- set c = compilers[v.compiler_id] -%}
-        <tr>
-            <td><a href="{{ url_for('runs', start=r.id, build_id=request.args.get('build_id'), testcase_id=request.args.get('testcase_id'), phase=request.args.get('phase'), status=request.args.get('status')) }}">{{r.id}}</a></td>
-            <td>{{c.student}}</td>
-            <td><a href="{{url_for('build', id=v.id)}}" class="monospace">{{v.sha[:8]}}</a> ({{v.id}})
-            <td><a href="{{url_for('runs', testcase_id=r.testcase_id)}}" class="monospace" data-toggle="tooltip" data-placement="right" title="{{t | testcase_tooltip | nl2monobr}}">T{{r.testcase_id}}</a></td>
-            <td><span class="label label-phase-{{t.phase | phase_to_index}}">{{r.phase}}</span></td>
-            <td><a href="{{url_for('download_runlog', id=r.id)}}"><span class="label label-{{r.status | label_class}}">{{r.status}}</span></a></td>
-            <td>{% if r.compile_time %}{{'{:.3f}s'.format(r.compile_time)}}{% endif %}</td>
-            <td>{% if r.running_time %}{{'{:.3f}s'.format(r.running_time)}} / {{'{:.3f}s'.format(t.timeout)}}{% endif %}</td>
-        </tr>
+        {% include 'runs_row.html' %}
     {% endfor -%}
     </tbody>
 </table>
 
+{% endblock %}
+
+{% block scripts %}
+{% if auto_refresh %}
+<script src="{{url_for('static', filename='runs.js')}}"></script>
+<script>
+(function() {
+    var url = "{{url_for('ajax_watch_runs')}}";
+    var latest_id = {{ testruns[0].id if testruns else 0 }};
+    var watch_list = [{{','.join(watch_list)}}];
+    updater.init(url, latest_id, watch_list);
+})();
+</script>
+{% endif %}
 {% endblock %}
