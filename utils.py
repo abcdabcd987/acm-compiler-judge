@@ -122,7 +122,7 @@ def parse_testcase(content):
         elif stripped == meta_end:
             break
     t['timeout'] = float(t['timeout'])
-    assert t['assert'] in ['success_exit', 'failure_exit', 'exitcode', 'output']
+    assert t['assert'] in ['success_compile', 'failure_compile', 'exitcode', 'output']
     if t['assert'] == 'exitcode':
         t['exitcode'] = int(t['exitcode'])
         assert 0 <= t['exitcode'] <= 255

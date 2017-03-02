@@ -1,0 +1,22 @@
+int main()
+{
+  int x = struct bad { syntax };
+  return 0;
+}
+
+
+/*!! metadata:
+=== comment ===
+bad syntax
+=== assert ===
+failure_compile
+=== timeout ===
+0.1
+=== input ===
+
+=== phase ===
+semantic extended
+=== is_public ===
+True
+
+!!*/

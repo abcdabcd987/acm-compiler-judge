@@ -1,0 +1,30 @@
+#include <stdio.h>
+int fib(int n) {
+    if (n == 0) return 0;
+    if (n == 1) return 1;
+    return fib(n-1) + fib(n-2);
+}
+int main(void) {
+  printf("fib(13) = %d\n", fib(13));
+  return 0;
+}
+
+
+
+/*!! metadata:
+=== comment ===
+fib without input
+=== assert ===
+output
+=== timeout ===
+0.5
+=== input ===
+=== output ===
+fib(13) = 233
+=== phase ===
+optim pretest
+=== is_public ===
+False
+
+!!*/
+

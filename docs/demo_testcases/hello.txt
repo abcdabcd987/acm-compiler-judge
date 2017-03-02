@@ -1,0 +1,26 @@
+#include <stdio.h>
+int main(void)
+{
+  printf("Hello, world!\n");
+  return 0;
+}
+
+
+
+/*!! metadata:
+=== comment ===
+printf hello world
+=== assert ===
+output
+=== timeout ===
+0.1
+=== input ===
+=== output ===
+Hello, world!
+=== phase ===
+codegen extended
+=== is_public ===
+False
+
+!!*/
+

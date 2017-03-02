@@ -9,6 +9,7 @@ window.updater = {
 
     busy_interval: 1000,
     slow_interval: 10000,
+    slow_down_request: 0,
     cur_interval: undefined,
     interval: undefined,
     tbody: undefined,
@@ -19,10 +20,21 @@ window.updater = {
         updater.watch_list = watch_list;
 
         updater.tbody = $('#run-table tbody');
-        updater.set_interval(updater.busy_interval);
+        updater.set_interval('busy');
     },
 
-    set_interval: function(interval) {
+    set_interval: function(type) {
+        var interval;
+        if (type == 'busy') {
+            interval = updater.busy_interval;
+            updater.slow_down_request = 0;
+        } else if (updater.cur_interval == updater.slow_interval) {
+            return;
+        } else {
+            ++updater.slow_down_request;
+            if (updater.slow_down_request === 10) interval = updater.slow_interval;
+            else return;
+        }
         if (interval === updater.cur_interval) return;
         if (updater.interval) clearInterval(updater.interval);
         updater.cur_interval = interval;
@@ -43,7 +55,7 @@ window.updater = {
         updater.last_stamp = updater.next_stamp;
         data.watch.forEach(updater.update_watch);
         data.new.forEach(updater.add_new);
-        updater.set_interval(updater.watch_list.length > 0 ? updater.busy_interval : updater.slow_interval);
+        updater.set_interval(updater.watch_list.length > 0 ? 'busy' : 'slow');
     },
 
     update_watch: function(r) {

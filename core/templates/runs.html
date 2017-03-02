@@ -63,7 +63,7 @@
 (function() {
     var url = "{{url_for('ajax_watch_runs')}}";
     var latest_id = {{ testruns[0].id if testruns else 0 }};
-    var watch_list = [{{','.join(watch_list)}}];
+    var watch_list = [{{','.join(map(str, watch_list))}}];
     updater.init(url, latest_id, watch_list);
 })();
 </script>

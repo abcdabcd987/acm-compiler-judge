@@ -146,10 +146,6 @@ def do_build():
 
 
 def judge_testcase(testcase, exitcode, stdout):
-    if testcase['assert'] == 'success_exit':
-        return exitcode == 0
-    if testcase['assert'] == 'failure_exit':
-        return exitcode != 0
     if testcase['assert'] == 'exitcode':
         return exitcode == testcase['exitcode']
     if testcase['assert'] == 'output':
@@ -255,8 +251,11 @@ def do_testrun():
     if time_sec >= settings.JUDGE_COMPILE_TIMEOUT:
         final_status = 'timeout'
         results.append(('compile', exitcode, stderr, time_sec, final_status))
-    elif testcase['assert'] == 'compile_error':
+    elif testcase['assert'] == 'failure_compile':
         final_status = 'passed' if exitcode != 0 else 'failed'
+        results.append(('compile', exitcode, stderr, time_sec, final_status))
+    elif testcase['assert'] == 'success_compile':
+        final_status = 'passed' if exitcode == 0 else 'failed'
         results.append(('compile', exitcode, stderr, time_sec, final_status))
     elif exitcode != 0:
         final_status = 'failed'

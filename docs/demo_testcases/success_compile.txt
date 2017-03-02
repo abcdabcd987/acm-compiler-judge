@@ -1,0 +1,22 @@
+int main()
+{
+  int x = 2 * 2;
+  return x - (2 + 2);
+}
+
+
+/*!! metadata:
+=== comment ===
+we know that 2*2 = 2+2
+=== assert ===
+success_compile
+=== timeout ===
+0.1
+=== input ===
+
+=== phase ===
+semantic pretest
+=== is_public ===
+True
+
+!!*/

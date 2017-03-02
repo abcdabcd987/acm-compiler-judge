@@ -103,29 +103,6 @@ def runs():
         auto_refresh=auto_refresh, watch_list=watch_list)
 
 
-# def render_phase_string(r):
-#     idx = utils.phase_to_index(r.phase)
-#     return '<span class="label label-phase-{}">{}</span>'.format(r.phase, idx)
-# def render_status_string(r):
-#     url = url_for('download_runlog', id=r.id)
-#     lc = utils.label_class(r.status)
-#     return '<a href="{}"><span class="label label-{}">{}</span></a>'.format(url, lc, r.status)
-# def render_compile_string(r):
-#     return '{:.3f}s'.format(r.compile_time) if r.compile_time else ''
-# def render_runtime_string(r, t):
-#     return '{:.3f}s / {:.3f}s'.format(r.running_time, t.timeout) if r.compile_time else ''
-# def render_sha_build_string(v):
-#     url = url_for('build', id=v.id)
-#     title = utils.nl2monobr(v.message)
-#     return '''<a href="{}" class="monospace" title="{}" data-toggle="tooltip"
-# data-placement="right">{}</a> ({})'''.format(url, title, v.sha[:8], v.id)
-# def render_testcase_string(r, t):
-#     url = url_for('runs', testcase_id=r.testcase_id)
-#     title = utils.nl2monobr(utils.testcase_tooltip(t))
-#     return '''<a href="{}" class="monospace" data-toggle="tooltip" data-placement="right"
-# title="{}">T{}</a>'''.format(url, title, r.testcase_id)
-
-
 @app.route(settings.WEBROOT + '/ajax/watch_runs.json')
 def ajax_watch_runs():
     # try:
