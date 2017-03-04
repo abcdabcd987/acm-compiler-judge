@@ -52,7 +52,7 @@ def add_testcase():
                         phase=t['phase'],
                         is_public=t['is_public'],
                         comment=t['comment'],
-                        timeout=t['timeout'],
+                        timeout=t.get('timeout', None),
                         cnt_run=0,
                         cnt_hack=0,
                         content=json.dumps(t))
@@ -111,13 +111,32 @@ def clear_judge_testcase_cache():
     os.system('rm {}/*'.format(settings.JUDGE_TESTCASE_PATH))
 
 
+def makedirs():
+    def mkdir(path):
+        if not os.path.exists(path):
+            os.makedirs(path)
+    mkdir(settings.CORE_BUILD_LOG_PATH)
+    mkdir(settings.CORE_TESTRUN_STDERR_PATH)
+    mkdir(settings.JUDGE_GIT_REPO_PATH)
+    mkdir(settings.JUDGE_TESTCASE_PATH)
+    print('done!')
+
+
 if __name__ == '__main__':
-    actions = [initdb, add_compiler, add_testcase, set_testcase, clear_judge_testcase_cache, rejudge_version]
+    actions = [
+	add_compiler,
+	add_testcase,
+	set_testcase,
+	rejudge_version,
+        initdb,
+	makedirs,
+	clear_judge_testcase_cache,
+    ]
     action_map = {func.__name__: func for func in actions}
     if len(sys.argv) < 2 or sys.argv[1] not in action_map:
         print('usage: ./maintenance.py <action>')
         print('<action> can be:')
-        for k in action_map:
-            print('    %s' % k)
+        for k in actions:
+            print('    %s' % k.__name__)
         sys.exit(1)
     action_map[sys.argv[1]]()

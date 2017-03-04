@@ -49,11 +49,12 @@ def testcase_tooltip(testcase):
     return '''=== Testcase {0.id} ===
 enabled: {0.enabled}
 phase: {0.phase}
-timeout: {0.timeout:.3f}s
-hack/run: {0.cnt_hack}/{0.cnt_run}
+{3}hack/run: {0.cnt_hack}/{0.cnt_run}
 pass rate: {1:.1f}%
 comment:
-{2}'''.format(testcase, pr, multiline_indent(testcase.comment, indent='&nbsp;&nbsp;&nbsp;&nbsp;'))
+{2}'''.format(testcase, pr,
+    multiline_indent(testcase.comment, indent='&nbsp;&nbsp;&nbsp;&nbsp;'),
+    'timeout: {:.3f}s\n'.format(testcase.timeout) if testcase.timeout else '')
 
 
 def label_class(status):
@@ -121,14 +122,16 @@ def parse_testcase(content):
             st = i+1
         elif stripped == meta_end:
             break
-    t['timeout'] = float(t['timeout'])
     assert t['assert'] in ['success_compile', 'failure_compile', 'exitcode', 'output']
-    if t['assert'] == 'exitcode':
-        t['exitcode'] = int(t['exitcode'])
-        assert 0 <= t['exitcode'] <= 255
-    elif t['assert'] == 'output':
-        assert 'output' in t
-    assert 'input' in t
+    if t['assert'] not in ['success_compile', 'failure_compile']:
+        if t['assert'] == 'exitcode':
+            t['timeout'] = float(t['timeout'])
+            t['exitcode'] = int(t['exitcode'])
+            assert 0 <= t['exitcode'] <= 255
+        elif t['assert'] == 'output':
+            t['timeout'] = float(t['timeout'])
+            assert 'output' in t
+        assert 'input' in t
     assert t['phase'] in settings.TEST_PHASES
     assert 'comment' in t
     assert t['is_public'] in ['True', 'False']

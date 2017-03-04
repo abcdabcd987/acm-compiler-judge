@@ -25,7 +25,7 @@
             <td><a class="monospace" data-toggle="tooltip" data-placement="right" title="{{t.comment | nl2monobr}}">T{{t.id}}</a></td>
             <td><span class="glyphicon glyphicon-{{'ok' if t.enabled else 'remove'}}" aria-hidden="true"></span></td>
             <td><span class="label label-phase-{{t.phase | phase_to_index}}">{{t.phase}}</span></td>
-            <td>{{'{:.3f}s'.format(t.timeout)}}
+            <td>{% if t.timeout %}{{'{:.3f}s'.format(t.timeout)}}{% endif %}</td>
             <td>{% if t.is_public %}<a href="{{url_for('download_testcase', id=t.id)}}">Download</a>{% else %}Not Available{% endif %}</td>
             <td>{{t.cnt_run}}</td>
             <td>{{t.cnt_hack}}</td>

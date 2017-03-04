@@ -10,10 +10,6 @@ int main()
 bad syntax
 === assert ===
 failure_compile
-=== timeout ===
-0.1
-=== input ===
-
 === phase ===
 semantic extended
 === is_public ===

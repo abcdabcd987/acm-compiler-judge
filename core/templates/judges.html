@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+{% block title %}Judge Status{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Judge Status</h1>
+</div>
+
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th class="monospace">name</th>
+            <th class="monospace">action</th>
+            <th class="monospace">last update</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for judge in judges %}
+        {% set dur = now - judge.time %}
+        <tr>
+            <td class="monospace">{{judge.name}}</td>
+            <td class="monospace">{{judge.action | safe}}</td>
+            <td class="monospace">{{dur.seconds}} seconds ago</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

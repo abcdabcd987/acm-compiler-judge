@@ -35,7 +35,7 @@ class Testcase(Base):
     enabled = Column(Boolean, nullable=False)
     phase = Column(String, nullable=False)
     is_public = Column(Boolean, nullable=False)
-    timeout = Column(Float, nullable=False)
+    timeout = Column(Float)
     comment = Column(Text, nullable=False)
     content = deferred(Column(Text, nullable=False))
     cnt_run = Column(Integer, nullable=False)

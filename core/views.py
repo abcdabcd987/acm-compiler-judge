@@ -4,8 +4,9 @@ import os
 import uuid
 import json
 import functools
-from datetime import datetime
 import StringIO
+from datetime import datetime
+from collections import namedtuple
 from ansi2html import ansi2html
 from flask import request, redirect, session, url_for, flash, render_template, jsonify, abort, send_file, Response
 
@@ -14,6 +15,8 @@ from models import *
 from database import db_session
 import settings, utils
 
+JudgeStatus = namedtuple('JudgeStatus', ['name', 'action', 'time'])
+judge_status = {}
 
 def copy_sqlalchemy_object_as_dict(o):
     d = dict(o.__dict__)
@@ -200,6 +203,12 @@ def download_testcase(id):
     return Response(text, content_type='text/plain; charset=utf-8')
 
 
+@app.route(settings.WEBROOT + '/judges')
+def judges():
+    judges = sorted(judge_status.itervalues(), key=lambda x: x.time, reverse=True)
+    return render_template('judges.html', judges=judges, now=datetime.utcnow())
+
+
 def token_required(f):
     @functools.wraps(f)
     def decorated_function(*args, **kwargs):
@@ -213,11 +222,14 @@ def token_required(f):
 @app.route(settings.WEBROOT + '/backend/dispatch/build', methods=['POST'])
 @token_required
 def backend_dispatch_build():
+    judge = request.form['judge']
     version = db_session.query(Version)\
                         .filter(Version.phase == 'build', Version.status == 'pending')\
                         .order_by(Version.id.asc())\
                         .first()
     if not version:
+        message = 'ask for build tasks, but not found'
+        judge_status[judge] = JudgeStatus(name=judge, action=message, time=datetime.utcnow())
         return jsonify({'found': False})
     compiler = db_session.query(Compiler).filter(Compiler.id == version.compiler_id).one()
     ret = {
@@ -227,6 +239,11 @@ def backend_dispatch_build():
     }
     version.status = 'building'
     db_session.commit()
+
+    message = 'ask for build tasks. assigned build task for <a href="{url_version}">build {version_id}</a>'.format(
+        url_version=url_for('build', id=version.id),
+        version_id=version.id)
+    judge_status[judge] = JudgeStatus(name=judge, action=message, time=datetime.utcnow())
     return jsonify(ret)
 
 
@@ -259,17 +276,27 @@ def backend_submit_build_log():
     else:
         version.status = 'failed'
     db_session.commit()
+
+    message = 'submit <a href="{url_log}">build log {log_id}</a> for <a href="{url_version}">build {version_id}</a>'.format(
+        url_log=url_for('download_runlog', id=build_log.id),
+        log_id=build_log.id,
+        url_version=url_for('build', id=version.id),
+        version_id=version.id)
+    judge_status[judge] = JudgeStatus(name=judge, action=message, time=datetime.utcnow())
     return jsonify({'ack': True})
 
 
 @app.route(settings.WEBROOT + '/backend/dispatch/testrun', methods=['POST'])
 @token_required
 def backend_dispatch_testrun():
+    judge = request.form['judge']
     t = db_session.query(TestRun)\
                   .filter(TestRun.status == 'pending')\
                   .order_by(TestRun.id.asc())\
                   .first()
     if not t:
+        message = 'ask for run tasks, but not found'
+        judge_status[judge] = JudgeStatus(name=judge, action=message, time=datetime.utcnow())
         return jsonify({'found': False})
     v = db_session.query(Version).filter(Version.id == t.version_id).one()
     c = db_session.query(Compiler).filter(Compiler.id == v.compiler_id).one()
@@ -282,6 +309,10 @@ def backend_dispatch_testrun():
     t.status = 'running'
     t.dispatch_at = datetime.utcnow()
     db_session.commit()
+
+    message = 'ask for run tasks. assigned run task for run {run_id}'.format(
+        run_id=t.id)
+    judge_status[judge] = JudgeStatus(name=judge, action=message, time=datetime.utcnow())
     return jsonify(ret)
 
 
@@ -308,6 +339,11 @@ def backend_submit_testrun():
     path = os.path.join(settings.CORE_TESTRUN_STDERR_PATH, '{:d}.txt'.format(id))
     with open(path, 'w') as f:
         f.write(stderr)
+
+    message = 'submit run result for <a href="{url_run}">run {run_id}</a>'.format(
+        url_run=url_for('download_runlog', id=r.id),
+        run_id=r.id)
+    judge_status[judge] = JudgeStatus(name=judge, action=message, time=datetime.utcnow())
     return jsonify({'ack': True})
 
 
