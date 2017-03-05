@@ -74,6 +74,7 @@ window.updater = {
         var tr = $(r.row_html);
         updater.tbody.prepend(tr);
         tr.find('[data-toggle="tooltip"]').tooltip({html: true});
+        tr.hide().show('slow');
         if (!r.finished) updater.watch_list.push(r.id);
         if (r.id > updater.latest_id) updater.latest_id = r.id;
     },
