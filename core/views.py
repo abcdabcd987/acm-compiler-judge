@@ -108,46 +108,55 @@ def runs():
 
 @app.route(settings.WEBROOT + '/ajax/watch_runs.json')
 def ajax_watch_runs():
-    # try:
-    lim = 10
-    stamp = int(request.args['stamp'])
-    qs = request.args.get('q', '').strip()
-    qs = map(lambda q: int(q.strip()), qs.split(','))[:lim] if qs else []
-    old = []
-    for testrun_id in qs:
-        r = db_session.query(TestRun).filter(TestRun.id == testrun_id).one()
-        v = db_session.query(Version).filter(Version.id == r.version_id).one()
-        c = db_session.query(Compiler).filter(Compiler.id == v.compiler_id).one()
-        t = db_session.query(Testcase).filter(Testcase.id == r.testcase_id).one()
-        old.append({
-            'id': r.id,
-            'row_html': render_template('runs_row.html', r=r, v=v, c=c, t=t),
-            'finished': r.status in ['passed', 'failed', 'timeout'],
-        })
+    try:
+        lim = 10
+        stamp = int(request.args['stamp'])
+        qs = request.args.get('q', '').strip()
+        qs = map(lambda q: int(q.strip()), qs.split(','))[:lim] if qs else []
+        old = []
+        for testrun_id in qs:
+            r = db_session.query(TestRun).filter(TestRun.id == testrun_id).one()
+            v = db_session.query(Version).filter(Version.id == r.version_id).one()
+            c = db_session.query(Compiler).filter(Compiler.id == v.compiler_id).one()
+            t = db_session.query(Testcase).filter(Testcase.id == r.testcase_id).one()
+            old.append({
+                'id': r.id,
+                'row_html': render_template('runs_row.html', r=r, v=v, c=c, t=t),
+                'finished': r.status in ['passed', 'failed', 'timeout'],
+            })
 
-    try: latest_id = int(request.args['latest_id'])
-    except: latest_id = 1<<30
-    query = db_session.query(TestRun).filter(TestRun.id > latest_id)\
-                      .order_by(TestRun.id.asc()).limit(lim)
-    new = []
-    for r in query:
-        v = db_session.query(Version).filter(Version.id == r.version_id).one()
-        c = db_session.query(Compiler).filter(Compiler.id == v.compiler_id).one()
-        t = db_session.query(Testcase).filter(Testcase.id == r.testcase_id).one()
-        new.append({
-            'id': r.id,
-            'row_html': render_template('runs_row.html', r=r, v=v, c=c, t=t),
-            'finished': r.status in ['passed', 'failed', 'timeout'],
-        })
-    return jsonify({'watch': old, 'new': new, 'stamp': stamp})
-    # except:
-    #     return abort(400)
+        try: latest_id = int(request.args['latest_id'])
+        except: latest_id = 1<<30
+        query = db_session.query(TestRun).filter(TestRun.id > latest_id)\
+                          .order_by(TestRun.id.asc()).limit(lim)
+        new = []
+        for r in query:
+            v = db_session.query(Version).filter(Version.id == r.version_id).one()
+            c = db_session.query(Compiler).filter(Compiler.id == v.compiler_id).one()
+            t = db_session.query(Testcase).filter(Testcase.id == r.testcase_id).one()
+            new.append({
+                'id': r.id,
+                'row_html': render_template('runs_row.html', r=r, v=v, c=c, t=t),
+                'finished': r.status in ['passed', 'failed', 'timeout'],
+            })
+        return jsonify({'watch': old, 'new': new, 'stamp': stamp})
+    except:
+        return abort(400)
 
 
 @app.route(settings.WEBROOT + '/testcases')
 def testcases():
     ts = db_session.query(Testcase).order_by(Testcase.id.desc()).all()
     return render_template('testcases.html', testcases=ts)
+
+
+def get_build_phase_count(rs):
+    count = { phase: dict() for phase in settings.TEST_PHASES }
+    for r in rs:
+        d = count[r.phase]
+        d[r.status] = d.get(r.status, 0) + 1
+        d['total'] = d.get('total', 0) + 1
+    return count
 
 
 @app.route(settings.WEBROOT + '/build/<int:id>')
@@ -159,9 +168,61 @@ def build(id):
     ls = db_session.query(BuildLog).filter(BuildLog.version_id == id).order_by(BuildLog.id.desc()).all()
     rs = db_session.query(TestRun).filter(TestRun.version_id == id).order_by(TestRun.id.desc()).all()
     ts = {t.id: t for t in db_session.query(Testcase)}
-    count = get_verion_testrun_counts(v)
-    return render_template('build.html', compiler=c, version=v, build_logs=ls, testruns=rs, testcases=ts, count=count)
+    count = get_build_phase_count(rs)
+    watch_list = [r.id for r in rs if r.status not in ['passed', 'failed', 'timeout']]
+    auto_refresh = v.status not in ['passed', 'failed']
+    return render_template('build.html', compiler=c, version=v, build_logs=ls, 
+        testruns=rs, testcases=ts, phase_count=count, auto_refresh=auto_refresh,
+        watch_list=watch_list)
 
+
+@app.route(settings.WEBROOT + '/ajax/build.json')
+def ajax_build():
+    stamp = int(request.args['stamp'])
+    latest_id = int(request.args['latest_id'])
+    id = int(request.args['build_id'])
+    v = db_session.query(Version).filter(Version.id == id).first()
+    if not v:
+        return abort(404)
+
+    lim = 10
+    stamp = int(request.args['stamp'])
+    qs = request.args.get('q', '').strip()
+    qs = map(lambda q: int(q.strip()), qs.split(','))[:lim] if qs else []
+    watch = []
+    for testrun_id in qs:
+        r = db_session.query(TestRun).filter(TestRun.id == testrun_id).one()
+        v = db_session.query(Version).filter(Version.id == r.version_id).one()
+        c = db_session.query(Compiler).filter(Compiler.id == v.compiler_id).one()
+        t = db_session.query(Testcase).filter(Testcase.id == r.testcase_id).one()
+        watch.append({
+            'id': r.id,
+            'row_html': render_template('build_row.html', r=r, v=v, c=c, t=t),
+            'finished': r.status in ['passed', 'failed', 'timeout'],
+        })
+
+    c = db_session.query(Compiler).filter(Compiler.id == v.compiler_id).one()
+    ls = db_session.query(BuildLog).filter(BuildLog.version_id == id).order_by(BuildLog.id.desc()).all()
+    rs = db_session.query(TestRun).filter(TestRun.version_id == id).order_by(TestRun.id.asc()).all()
+    ts = {t.id: t for t in db_session.query(Testcase)}
+    count = get_build_phase_count(rs)
+    runs = []
+    for r in rs:
+        if r.id > latest_id:
+            runs.append({
+                'html': render_template('build_row.html', r=r, t=ts[r.testcase_id]),
+                'id': r.id,
+                'finished': r.status in ['passed', 'failed', 'timeout'],
+            })
+    if rs: latest_id = rs[-1].id
+    return jsonify({
+        'stamp': stamp,
+        'latest_id': latest_id,
+        'bar': render_template('build_bar.html', version=v, phase_count=count),
+        'runs': runs ,
+        'watch': watch,
+        'auto_refresh': v.status not in ['passed', 'failed']
+    })
 
 
 @app.route(settings.WEBROOT + '/show/buildlog_<int:id>.html')

@@ -6,6 +6,12 @@
         Build <span class="monospace">{{version.sha[:8]}}</span>
         <small>of {{compiler.student}}</small>
     </h1>
+    {% if auto_refresh %}
+    <p>
+        <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
+        Auto-refresh is enabled on this page.
+    </p>
+    {% endif %}
 </div>
 
 <div class="row">
@@ -25,17 +31,15 @@ Message:
     </div>
     <div class="col-md-6">
 <h2>Status</h2>
-<p>
-<span class="label label-phase-{{version.phase | phase_to_index}}">{{version.phase}}</span>
-<span class="label label-{{version.status | label_class}}">{{version.status}}</span>
-</p>
-<pre>{{count | version_count_tooltip | nl2monobr | safe}}</pre>
+<div id="build-bar">
+{% include "build_bar.html" %}
+</div>
     </div>
 </div>
 
 
 <h2>Runs</h2>
-<table class="table table-striped table-hover table-condensed">
+<table id="table-build-runs" class="table table-striped table-hover table-condensed">
     <thead>
         <tr>
             <th>#</th>
@@ -49,16 +53,25 @@ Message:
     <tbody>
     {%- for r in testruns %}
         {%- set t = testcases[r.testcase_id] -%}
-        <tr>
-            <td>{{r.id}}</td>
-            <td><a {% if t.is_public %} href="{{url_for('download_testcase', id=r.testcase_id)}}"{% endif %} class="monospace" data-toggle="tooltip" data-placement="right" title="{{t | testcase_tooltip | nl2monobr}}">T{{r.testcase_id}}</a></td>
-            <td><span class="label label-phase-{{t.phase | phase_to_index}}">{{r.phase}}</span></td>
-            <td><a href="{{url_for('download_runlog', id=r.id)}}"><span class="label label-{{r.status | label_class}}">{{r.status}}</span></a></td>
-            <td>{% if r.compile_time %}{{'{:.3f}s'.format(r.compile_time)}}{% endif %}</td>
-            <td>{% if r.running_time %}{{'{:.3f}s'.format(r.running_time)}} / {{'{:.3f}s'.format(t.timeout)}}{% endif %}</td>
-        </tr>
+        {% include 'build_row.html' %}
     {% endfor -%}
     </tbody>
 </table>
 
+{% endblock %}
+
+{% block scripts %}
+
+{% if auto_refresh %}
+<script src="{{url_for('static', filename='build.js')}}"></script>
+<script>
+(function() {
+    var url = "{{url_for('ajax_build')}}";
+    var latest_id = {{ testruns[0].id if testruns else 0 }};
+    var build_id = {{ version.id }};
+    var watch_list = [{{','.join(map(str, watch_list))}}];
+    updater.init(url, build_id, latest_id, watch_list);
+})();
+</script>
+{% endif %}
 {% endblock %}

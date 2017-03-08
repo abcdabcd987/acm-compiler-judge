@@ -1,0 +1,8 @@
+<tr data-id="{{r.id}}">
+    <td data-field="id">{{r.id}}</td>
+    <td data-field="testcase"><a {% if t.is_public %} href="{{url_for('download_testcase', id=r.testcase_id)}}"{% endif %} class="monospace" data-toggle="tooltip" data-placement="right" title="{{t | testcase_tooltip | nl2monobr}}">T{{r.testcase_id}}</a></td>
+    <td data-field="phase"><span class="label label-phase-{{t.phase | phase_to_index}}">{{r.phase}}</span></td>
+    <td data-field="status"><a href="{{url_for('download_runlog', id=r.id)}}"><span class="label label-{{r.status | label_class}}">{{r.status}}</span></a></td>
+    <td data-field="compile">{% if r.compile_time %}{{'{:.3f}s'.format(r.compile_time)}}{% endif %}</td>
+    <td data-field="runtime">{% if r.running_time %}{{'{:.3f}s'.format(r.running_time)}} / {{'{:.3f}s'.format(t.timeout)}}{% endif %}</td>
+</tr>

@@ -1,0 +1,33 @@
+<table class="table table-condensed">
+    <tr>
+        <td><span class="label label-building">build</span></td>
+        <td>{% if version.phase == 'build' %}<span class="label label-{{version.status | label_class}}">{{version.status}}</span>{% else %}<span class="label label-success">passed</span>{% endif %}</td>
+    </tr>
+    {% for phase in test_phases %}
+    <tr>
+        <td style="width: 11em;"><span class="label label-phase-{{phase | phase_to_index}}">{{phase}}</span></td>
+        {% set count = phase_count[phase] %}
+        {% if count.get('total', 0) == 0 %}
+        <td class="monospace">n/a</td>
+        {% else %}
+        <td class="progress monospace">
+            <div class="progress-bar progress-bar-success" style="width: {{ count.get('passed', 0) * 100.0 / count['total'] }}%">
+                {{ count.get('passed', 0) }}
+            </div>
+            <div class="progress-bar progress-bar-warning" style="width: {{ count.get('timeout', 0) * 100.0 / count['total'] }}%">
+                {{ count.get('timeout', 0) }}
+            </div>
+            <div class="progress-bar progress-bar-danger" style="width: {{ count.get('failed', 0) * 100.0 / count['total'] }}%">
+                {{ count.get('failed', 0) }}
+            </div>
+            <div class="progress-bar progress-bar-info" style="width: {{ count.get('running', 0) * 100.0 / count['total'] }}%">
+                {{ count.get('running', 0) }}
+            </div>
+            <div class="progress-bar progress-bar-gray" style="width: {{ count.get('pending', 0) * 100.0 / count['total'] }}%">
+                {{ count.get('pending', 0) }}
+            </div>
+        </td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+</table>
