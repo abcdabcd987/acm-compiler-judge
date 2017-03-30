@@ -19,7 +19,7 @@
         <tr>
             <td class="monospace">{{judge.name}}</td>
             <td class="monospace">{{judge.action | safe}}</td>
-            <td class="monospace">{{dur.seconds}} seconds ago</td>
+            <td class="monospace">{{judge.time | time_from_now}}</td>
         </tr>
     {% endfor %}
     </tbody>

@@ -4,6 +4,7 @@ import sys
 import time
 import json
 import shutil
+import codecs
 import requests
 import tempfile
 import subprocess
@@ -148,6 +149,8 @@ def do_build():
 def judge_testcase(testcase, exitcode, stdout):
     if testcase['assert'] == 'exitcode':
         return exitcode == testcase['exitcode']
+    if testcase['assert'] == 'runtime_error':
+        return exitcode != 0
     if testcase['assert'] == 'output':
         out_lines = stdout.strip().splitlines()
         ans_lines = testcase['output'].strip().splitlines()
@@ -176,7 +179,7 @@ def run(compiler, version, testcase, testrun, command, runner_code, asm_code=Non
             f.write(asm_code)
         cmd += ['/testrun/program.asm', '/testrun/input.txt']
     else:
-        with open(os.path.join(root, 'program.txt'), 'w') as f:
+        with codecs.open(os.path.join(root, 'program.txt'), 'w', 'utf-8') as f:
             f.write(testcase['program'])
         phase_prefix = testrun['phase'].split()[0]
         cmd += [phase_prefix, '/testrun/testcase.txt']

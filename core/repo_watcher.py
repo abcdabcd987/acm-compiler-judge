@@ -3,6 +3,7 @@ import os
 import sys
 import time
 import subprocess
+from datetime import datetime
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
 import settings
@@ -22,6 +23,8 @@ def get_latest_remote_version(repo_url):
 
 def do_compiler(compiler):
     version_sha = get_latest_remote_version(compiler.repo_url)
+    compiler.last_check_time = datetime.utcnow()
+    db_session.commit()
     if not version_sha:
         return
     newer = False
@@ -51,7 +54,7 @@ def main():
     while True:
         for compiler in compilers:
             do_compiler(compiler)
-            time.sleep(1)
+            time.sleep(2)
 
 
 if __name__ == '__main__':

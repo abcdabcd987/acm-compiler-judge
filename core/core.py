@@ -10,5 +10,7 @@ import web
 import views
 import models, database, settings, utils
 
+app = web.app
+
 if __name__ == '__main__':
-    web.app.run(host='0.0.0.0', port=6002, debug=True)
+    app.run(host='0.0.0.0', port=6002, debug=True)

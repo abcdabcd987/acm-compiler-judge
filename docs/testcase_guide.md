@@ -5,6 +5,7 @@ The online judge system supports four different kinds of test assertions:
 * `success_compile`: The test is passed if the compiler successfully compiles the program.
 * `failure_compile`: The test is passed if the compiler reports compilation error.
 * `exitcode`: First, the compiler should successfully compiles the program. Then, the system will run the compiled program. If it terminates with the exitcode equal to the expected one, then the test is passed. Otherwise, the test is failed or timed out.
+* `runtime_error`: Similar to `exitcode` assertion. The test is passed if a runtime error occured.
 * `output`: Similar to `exitcode` assertion. The test is passed if the compiled program successfully terminates with outputs equal to the expected ones.
 
 A testcase file starts with the testing program code. Then, there are several metadata to specify. To mark the start of metadata, use a line: `/*!! metadata:`. As you can imagine, the metadata region ends with a line: `!!*/`. You should make sure that no more program code after the metadata region, i.e., `!!*/` should be followed by empty newlines and EOF.

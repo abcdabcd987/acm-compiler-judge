@@ -8,7 +8,7 @@
     * `semantic.bash`, `codegen.bash`, `optim.bash`
 5. Every time you pushed your git repository, the system will automatically build your compiler, and then run tests.
 
-If the system finds that there is a new version of your compiler (i.e. new commit in your git repository), it will download your latest code and build it. Your `build.bash` will be run when the system is building your compiler. You can download and install software that your compiler depends, and compile your compiler. Everything happened during this building process will be preserved. The source code of your compiler is placed at `/compiler/` directory. You have at most 30 seconds to finish the building process.
+If the system finds that there is a new version of your compiler (i.e. new commit in your git repository), it will download your latest code and build it. Your `build.bash` will be run when the system is building your compiler. You can download and install software that your compiler depends, and compile your compiler. Everything happened during this building process will be preserved. The source code of your compiler is placed at `/compiler/` directory.
 
 If your compiler is built successfully, the system will test your compiler next. Tests are divided into several phases:
 
@@ -29,4 +29,4 @@ mycompiler program.txt target.txt  # run my compiler, save to target.txt
 cat target.txt                     # print target.txt to stdout
 ```
 
-Additionally, you can print some messages to `stderr`. This might be helpful when you are debugging. However, please do not print the testcase itself to `stderr`, as it will leak the testcase. And please do not try to steal testcases by any means (e.g. print to `stderr`, upload to a server, etc.), which is strictly prohibited and could lead you severe punishment.
+Additionally, you can print some messages to `stderr`. This might be helpful when you are debugging. However, please do not print the testcase itself to `stderr`, as it will leak the testcase. And please do not try to steal non-public testcases by any means (e.g. print to `stderr`, upload to a server, etc.), which is strictly prohibited and could lead you severe punishment.

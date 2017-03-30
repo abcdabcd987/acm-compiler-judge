@@ -23,6 +23,7 @@ WEBSITE_NAME = 'Compiler 2017'
 WEBROOT = '/compiler2017'
 BUILDS_PER_PAGE = 20
 RUNS_PER_PAGE = 30
+CORE_PORT = 6002
 HOMEPAGE_TITLE = "Hello, Compiler 2017"
 HOMEPAGE_DESCRIPTION = '''
 <p>
@@ -36,14 +37,24 @@ Please do
 Please do not
   <ul>
     <li>Exploit bugs of the online judge.</li>
-    <li>Steal testcases in any form (for example, print them to stderr)</li>
+    <li>Steal non-public testcases in any form (for example, print them to stderr)</li>
+  </ul>
+Information:
+  <ul>
+    <li>Source code build time (i.e. the time taken to build your compiler): at most 30 seconds</li>
+    <li>Compile time (i.e. the time your compiler runs): at most 5 seconds</li>
+    <li>Memory usage: at most 256MB</li>
+    <li>Java version: Oracle JDK 1.8.0 Update 121</li>
+    <li>g++ version: 5.4.0</li>
   </ul>
 <hr>
 Some Links:
 <ul>
   <li><a href="https://acm.sjtu.edu.cn/wiki/Compiler_2017">Compiler 2017 Course Wiki</a></li>
+  <li><a href="https://bitbucket.org/acmcompiler/compiler2017-demo/src">How to make my compiler run on the Online Judge</a></li>
   <li><a href="https://github.com/abcdabcd987/acm-compiler-judge/blob/master/docs/use_guide.md">How to Use the Online Judge</a></li>
   <li><a href="https://github.com/abcdabcd987/acm-compiler-judge/blob/master/docs/testcase_guide.md">How to Contribute a Testcase</a></li>
+  <li><a href="https://bitbucket.org/acmcompiler/compiler2017-testcases">Git repository of testcases (may not be up-to-date as the Online Judge)</a></li>
 </ul>
 '''
 
@@ -54,7 +65,7 @@ JUDGE_REQUEST_TIMEOUT = 5
 JUDGE_COMPILE_TIMEOUT = 15
 JUDGE_RUN_TIMES_PER_TEST = 3
 LOG_LENGTH_LIMIT = 4096
-CORE_URL = 'http://localhost:6002' + WEBROOT
+CORE_URL = 'http://localhost:{}{}'.format(CORE_PORT, WEBROOT)
 JUDGE_GIT_REPO_PATH = os.path.join(BASEDIR, 'data', 'repo')
 JUDGE_TESTCASE_PATH = os.path.join(BASEDIR, 'data', 'testcase')
 

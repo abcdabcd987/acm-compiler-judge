@@ -8,6 +8,7 @@ class Compiler(Base):
     student = Column(String, nullable=False)
     repo_url = Column(String, nullable=False)
     latest_version_id = Column(Integer, ForeignKey('versions.id'))
+    last_check_time = Column(TIMESTAMP)
 
 class Version(Base):
     __tablename__ = 'versions'

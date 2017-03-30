@@ -5,6 +5,7 @@ import os
 import sys
 import time
 import json
+import codecs
 import hashlib
 import StringIO
 from datetime import datetime
@@ -39,15 +40,18 @@ def add_compiler():
 
 
 def add_testcase():
-    if len(sys.argv) != 3:
-        print('usage: ./maintenance.py add_testcase <path_to_testcase>')
+    if len(sys.argv) not in [3, 4]:
+        print('usage: ./maintenance.py add_testcase <path_to_testcase> [-y]')
         sys.exit(1)
-    with open(sys.argv[2]) as f:
+    with codecs.open(sys.argv[2], 'r', 'utf-8') as f:
         content = f.read()
     t = utils.parse_testcase(content)
-    print(utils.testcase_to_text(t))
-    confirm = raw_input('Confirm (y/n)? ')
-    assert confirm.strip() == 'y'
+    if len(sys.argv) == 4:
+        assert sys.argv[3] == '-y'
+    else:
+        print(utils.testcase_to_text(t))
+        confirm = raw_input('Confirm (y/n)? ')
+        assert confirm.strip() == 'y'
     testcase = Testcase(enabled=True,
                         phase=t['phase'],
                         is_public=t['is_public'],
@@ -73,7 +77,7 @@ def add_testcase():
             version.phase = testcase.phase
             version.status = 'running'
     db_session.commit()
-    print('done!')
+    print('done!', sys.argv[2])
 
 
 def set_testcase():

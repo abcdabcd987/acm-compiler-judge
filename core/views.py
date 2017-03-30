@@ -24,12 +24,12 @@ def copy_sqlalchemy_object_as_dict(o):
     return d
 
 
-@app.route(settings.WEBROOT)
+@app.route(settings.WEBROOT + '/')
 def homepage():
     return render_template('homepage.html')
 
 
-@app.route(settings.WEBROOT + '/compilers')
+@app.route(settings.WEBROOT + '/compilers/')
 def compilers():
     compilers = db_session.query(Compiler).order_by(Compiler.id.asc()).all()
     versions = []
@@ -113,6 +113,7 @@ def ajax_watch_runs():
         stamp = int(request.args['stamp'])
         qs = request.args.get('q', '').strip()
         qs = map(lambda q: int(q.strip()), qs.split(','))[:lim] if qs else []
+        qs.sort()
         old = []
         for testrun_id in qs:
             r = db_session.query(TestRun).filter(TestRun.id == testrun_id).one()
@@ -178,51 +179,55 @@ def build(id):
 
 @app.route(settings.WEBROOT + '/ajax/build.json')
 def ajax_build():
-    stamp = int(request.args['stamp'])
-    latest_id = int(request.args['latest_id'])
-    id = int(request.args['build_id'])
-    v = db_session.query(Version).filter(Version.id == id).first()
-    if not v:
-        return abort(404)
+    try:
+        stamp = int(request.args['stamp'])
+        latest_id = int(request.args['latest_id'])
+        id = int(request.args['build_id'])
+        v = db_session.query(Version).filter(Version.id == id).first()
+        if not v:
+            return abort(404)
 
-    lim = 10
-    stamp = int(request.args['stamp'])
-    qs = request.args.get('q', '').strip()
-    qs = map(lambda q: int(q.strip()), qs.split(','))[:lim] if qs else []
-    watch = []
-    for testrun_id in qs:
-        r = db_session.query(TestRun).filter(TestRun.id == testrun_id).one()
-        v = db_session.query(Version).filter(Version.id == r.version_id).one()
-        c = db_session.query(Compiler).filter(Compiler.id == v.compiler_id).one()
-        t = db_session.query(Testcase).filter(Testcase.id == r.testcase_id).one()
-        watch.append({
-            'id': r.id,
-            'row_html': render_template('build_row.html', r=r, v=v, c=c, t=t),
-            'finished': r.status in ['passed', 'failed', 'timeout'],
-        })
-
-    c = db_session.query(Compiler).filter(Compiler.id == v.compiler_id).one()
-    ls = db_session.query(BuildLog).filter(BuildLog.version_id == id).order_by(BuildLog.id.desc()).all()
-    rs = db_session.query(TestRun).filter(TestRun.version_id == id).order_by(TestRun.id.asc()).all()
-    ts = {t.id: t for t in db_session.query(Testcase)}
-    count = get_build_phase_count(rs)
-    runs = []
-    for r in rs:
-        if r.id > latest_id:
-            runs.append({
-                'html': render_template('build_row.html', r=r, t=ts[r.testcase_id]),
+        lim = 10
+        stamp = int(request.args['stamp'])
+        qs = request.args.get('q', '').strip()
+        qs = map(lambda q: int(q.strip()), qs.split(','))[:lim] if qs else []
+        qs.sort()
+        watch = []
+        for testrun_id in qs:
+            r = db_session.query(TestRun).filter(TestRun.id == testrun_id).one()
+            v = db_session.query(Version).filter(Version.id == r.version_id).one()
+            c = db_session.query(Compiler).filter(Compiler.id == v.compiler_id).one()
+            t = db_session.query(Testcase).filter(Testcase.id == r.testcase_id).one()
+            watch.append({
                 'id': r.id,
+                'row_html': render_template('build_row.html', r=r, v=v, c=c, t=t),
                 'finished': r.status in ['passed', 'failed', 'timeout'],
             })
-    if rs: latest_id = rs[-1].id
-    return jsonify({
-        'stamp': stamp,
-        'latest_id': latest_id,
-        'bar': render_template('build_bar.html', version=v, phase_count=count),
-        'runs': runs ,
-        'watch': watch,
-        'auto_refresh': v.status not in ['passed', 'failed']
-    })
+
+        c = db_session.query(Compiler).filter(Compiler.id == v.compiler_id).one()
+        ls = db_session.query(BuildLog).filter(BuildLog.version_id == id).order_by(BuildLog.id.desc()).all()
+        rs = db_session.query(TestRun).filter(TestRun.version_id == id).order_by(TestRun.id.asc()).all()
+        ts = {t.id: t for t in db_session.query(Testcase)}
+        count = get_build_phase_count(rs)
+        runs = []
+        for r in rs:
+            if r.id > latest_id:
+                runs.append({
+                    'html': render_template('build_row.html', r=r, t=ts[r.testcase_id]),
+                    'id': r.id,
+                    'finished': r.status in ['passed', 'failed', 'timeout'],
+                })
+        if rs: latest_id = rs[-1].id
+        return jsonify({
+            'stamp': stamp,
+            'latest_id': latest_id,
+            'bar': render_template('build_bar.html', version=v, phase_count=count),
+            'runs': runs ,
+            'watch': watch,
+            'auto_refresh': v.status not in ['passed', 'failed']
+        })
+    except:
+        return abort(400)
 
 
 @app.route(settings.WEBROOT + '/show/buildlog_<int:id>.html')

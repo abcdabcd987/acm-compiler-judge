@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import re
 import time
 import pytz
+import arrow
 import StringIO
 import dateutil.parser
 from datetime import datetime
@@ -32,6 +33,10 @@ def parse_to_utc(s):
 
 def nl2p(text):
     return ''.join("<p>%s</p>" % line for line in text.splitlines() if line)
+
+
+def time_from_now(utc_datetime):
+    return arrow.Arrow.fromdatetime(utc_datetime).humanize() if utc_datetime else ''
 
 
 def nl2monobr(text):
@@ -122,7 +127,7 @@ def parse_testcase(content):
             st = i+1
         elif stripped == meta_end:
             break
-    assert t['assert'] in ['success_compile', 'failure_compile', 'exitcode', 'output']
+    assert t['assert'] in ['success_compile', 'failure_compile', 'exitcode', 'runtime_error', 'output']
     if t['assert'] not in ['success_compile', 'failure_compile']:
         if t['assert'] == 'exitcode':
             t['timeout'] = float(t['timeout'])
