@@ -327,7 +327,7 @@ if __name__ == '__main__':
     with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'runner_run.bash')) as f:
         code_runner_run = f.read()
     while True:
-        done1 = do_build()
+        done1 = do_build() if random.random() < 0.05 else False
         done2 = do_testrun()
         if not done1 and not done2:
             time.sleep(1)

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-sleep 10
-ip=$(ifconfig | sed -En 's/127.0.0.1//;s/172.17.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p')
+sleep 30
+ip=$(hostname -I | awk '{print $1}')
 cd "$(dirname "$0")"
 sed -i '/JUDGE_NAME =/d' settings.py
 echo "JUDGE_NAME = 'judge.$ip'" >> settings.py
