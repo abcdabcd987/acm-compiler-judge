@@ -40,6 +40,12 @@ vim settings.py
 ./maintenance.py makedirs
 ```
 
+You can add `autostart_tmux_judge.sh` to `/etc/rc.local` to make judge autostart. For example,
+
+```bash
+su - abcdabcd987 -c "nohup /home/abcdabcd987/acm-compiler-judge/autostart_tmux_judge.sh > /dev/null 2>&1 &"
+```
+
 ## Run Core Server
 
 ```bash

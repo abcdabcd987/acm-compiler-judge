@@ -112,8 +112,8 @@ def ajax_watch_runs():
         lim = 10
         stamp = int(request.args['stamp'])
         qs = request.args.get('q', '').strip()
-        qs = map(lambda q: int(q.strip()), qs.split(','))[:lim] if qs else []
-        qs.sort()
+        qs = map(lambda q: int(q.strip()), qs.split(',')) if qs else []
+        qs = sorted(qs)[:lim]
         old = []
         for testrun_id in qs:
             r = db_session.query(TestRun).filter(TestRun.id == testrun_id).one()
@@ -190,8 +190,8 @@ def ajax_build():
         lim = 10
         stamp = int(request.args['stamp'])
         qs = request.args.get('q', '').strip()
-        qs = map(lambda q: int(q.strip()), qs.split(','))[:lim] if qs else []
-        qs.sort()
+        qs = map(lambda q: int(q.strip()), qs.split(',')) if qs else []
+        qs = sorted(qs)[:lim]
         watch = []
         for testrun_id in qs:
             r = db_session.query(TestRun).filter(TestRun.id == testrun_id).one()
