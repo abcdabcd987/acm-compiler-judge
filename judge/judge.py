@@ -137,13 +137,14 @@ def do_build():
         resp = r.json()
     except:
         print 'failed to fetch build tasks'
-        return
+        return False
     if not resp['found']:
-        return
+        return False
     version, compiler = resp['version'], resp['compiler']
     print 'got a build task for version', version['id']
     build_and_send_log(version, compiler)
     print 'build task done\n'
+    return True
 
 
 def judge_testcase(testcase, exitcode, stdout):
@@ -237,9 +238,9 @@ def do_testrun():
         resp = r.json()
     except:
         print 'failed to fetch testrun tasks'
-        return
+        return False
     if not resp['found']:
-        return
+        return False
     testrun, version, compiler = resp['testrun'], resp['version'], resp['compiler']
     print 'got a run task for testrun', testrun['id']
 
@@ -316,6 +317,7 @@ def do_testrun():
             time.sleep(1)
     print ' submitted'
     print 'task done\n'
+    return True
 
 
 if __name__ == '__main__':
@@ -325,6 +327,7 @@ if __name__ == '__main__':
     with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'runner_run.bash')) as f:
         code_runner_run = f.read()
     while True:
-        do_build()
-        do_testrun()
-        time.sleep(1)
+        done1 = do_build()
+        done2 = do_testrun()
+        if not done1 and not done2:
+            time.sleep(1)

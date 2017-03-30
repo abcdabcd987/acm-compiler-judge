@@ -3,7 +3,7 @@
 ## Setup Guide for the Core Server
 
 ```bash
-sudo apt-get install -y git python-pip postgres python-dev python-setuptools gunicorn
+sudo apt-get install -y git python-pip postgresql postgresql-server-dev-9.3 libpq-dev python-dev python-setuptools gunicorn
 sudo -H -u postgres psql
 postgres=# CREATE USER compiler2017 WITH PASSWORD 'mypassword';
 postgres=# CREATE DATABASE compiler2017;
