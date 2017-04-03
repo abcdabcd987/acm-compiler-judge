@@ -65,7 +65,9 @@ def add_testcase():
 
     tphase = utils.phase_to_index(testcase.phase)
     for compiler in db_session.query(Compiler):
-        version = db_session.query(Version).filter(Version.id == compiler.latest_version_id).one()
+        version = db_session.query(Version).filter(Version.id == compiler.latest_version_id).first()
+        if not version:
+            continue
         vphase = utils.phase_to_index(version.phase)
         if vphase > tphase or (vphase == tphase and version.status != 'pending'):
             r = TestRun(version_id=version.id,
