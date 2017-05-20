@@ -154,6 +154,8 @@ def judge_testcase(testcase, exitcode, stdout):
     if testcase['assert'] == 'runtime_error':
         return exitcode != 0
     if testcase['assert'] == 'output':
+        if exitcode != 0:
+            return False
         out_lines = stdout.strip().splitlines()
         ans_lines = testcase['output'].strip().splitlines()
         if len(out_lines) != len(ans_lines):

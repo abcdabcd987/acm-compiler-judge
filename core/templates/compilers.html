@@ -12,6 +12,7 @@
             <th>Student</th>
             <th>Repository URL</th>
             <th>Latest Build</th>
+            <th>Phase</th>
             <th>Last Check</th>
             <th></th>
         </tr>
@@ -22,8 +23,9 @@
             <td>{{c.id}}</td>
             <td>{{c.student}}</td>
             <td class="monospace" style="font-size: 75%;">{{c.repo_url}}</td>
-            <td>{% if v %}<a href="{{url_for('build', id=v.id)}}" class="monospace" data-toggle="tooltip" data-placement="right" title="{{v.message | nl2monobr}}">{{v.sha[:8]}}</a> ({{v.committed_at | format_from_utc}}){% endif %}</td>
-            <td>{{c.last_check_time | time_from_now}}
+            <td>{% if v %}<a href="{{url_for('build', id=v.id)}}" class="monospace" data-toggle="tooltip" data-placement="right" title="{{v.message | nl2monobr}}">{{v.sha[:8]}}</a> ({{v.committed_at | time_from_now}}){% endif %}</td>
+            <td>{% if v %}<span class="label label-phase-{{v.phase | phase_to_index}}" data-toggle="tooltip" data-placement="right">{{v.phase}}</span>{% endif %}</td>
+            <td>{{c.last_check_time | time_from_now}}</td>
             <td><a href="{{url_for('builds', compiler_id=c.id)}}">(builds)</a></td>
         </tr>
     {% endfor %}
