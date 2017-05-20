@@ -294,7 +294,7 @@ def do_testrun():
         running_time = .0
         for name, exitcode, stderr, time_sec, status in results[1:]:
             running_time += time_sec
-        running_time /= len(results)
+        running_time /= len(results) - 1
     else:
         running_time = .0
     print ' log formatted'
