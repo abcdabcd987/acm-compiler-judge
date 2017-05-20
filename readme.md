@@ -66,3 +66,12 @@ gunicorn -b 0.0.0.0:6002 core.core:app  # for production run
 ```bash
 ./judge/judge.py
 ```
+
+## Some tips on `~/.ssh/config`
+
+```
+Host *
+    StrictHostKeyChecking no
+Host bitbucket.org # if GFWed, you might want to use a proxy
+    ProxyCommand=socat - PROXY:your-proxy-host:%h:%p,proxyport=your-proxy-port
+```

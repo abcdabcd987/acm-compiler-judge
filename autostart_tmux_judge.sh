@@ -1,7 +1,7 @@
 #!/bin/bash
 
 sleep 30
-ip=$(hostname -I | awk '{print $1}')
+ip=$(hostname -I | sed 's/10.0.2.15//g' | awk '{print $1}')
 cd "$(dirname "$0")"
 git pull
 sed -i '/JUDGE_NAME =/d' settings.py
