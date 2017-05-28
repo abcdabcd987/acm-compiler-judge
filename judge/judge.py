@@ -172,7 +172,7 @@ def run(compiler, version, testcase, testrun, command, runner_code, asm_code=Non
     print ' run', command
     root = tempfile.mkdtemp(prefix='acm-compiler-judge-testrun')
     cmd = ['docker', 'run', '-d']
-    cmd += ['-m', '256m']
+    cmd += ['-m', settings.JUDGE_RUN_MEMORY_LIMIT]
     cmd += ['-v', '{}:/testrun'.format(root), '{}:{}'.format(compiler['id'], version['id'])]
     cmd += ['bash', '/testrun/runner.bash']
     with open(os.path.join(root, 'runner.bash'), 'w') as f:
