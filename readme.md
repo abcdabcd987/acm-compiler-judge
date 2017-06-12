@@ -67,6 +67,12 @@ gunicorn -b 0.0.0.0:6002 core.core:app  # for production run
 ./judge/judge.py
 ```
 
+## Final Rejudge
+
+```bash
+./maintenance.py final_rejudge <input_csv> <output_csv>
+```
+
 ## Some tips on `~/.ssh/config`
 
 ```

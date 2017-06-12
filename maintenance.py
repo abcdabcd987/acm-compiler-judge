@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, division, unicode_literals
 import os
+import csv
 import sys
 import time
 import json
@@ -128,15 +129,61 @@ def makedirs():
     print('done!')
 
 
+def final_rejudge():
+    if len(sys.argv) != 4:
+        print('usage: ./maintenance.py final_rejudge <input_csv> <output_csv>')
+        sys.exit(1)
+
+    compilers = {c.id: c for c in db_session.query(Compiler)}
+    submit_versions = set()
+    with open(sys.argv[2]) as fin:
+        reader = csv.DictReader(fin)
+        fieldnames = reader.fieldnames
+        for row in reader:
+            cid = int(row['cid'])
+            assert cid in compilers
+            assert compilers[cid].student == row['name'].decode('utf-8')
+            for col in fieldnames:
+                value = row[col]
+                if col.decode('utf-8') in ('cid', 'name') or not value:
+                    continue
+                submit_versions.add(int(value))
+    with open(sys.argv[2]) as fin, open(sys.argv[3], 'w') as fout:
+        # rejudge_versions = {v: v for v in submit_versions}
+        rejudge_versions = {}
+        for version_id in submit_versions:
+            old = db_session.query(Version).filter(Version.id == version_id).one()
+            new = Version(compiler_id=old.compiler_id,
+                          sha=old.sha,
+                          phase='build',
+                          status='pending')
+            db_session.add(new)
+            db_session.commit()
+            rejudge_versions[old.id] = new.id
+
+        reader = csv.DictReader(fin)
+        writer = csv.DictWriter(fout, fieldnames)
+        writer.writeheader()
+        for row in reader:
+            for col in fieldnames:
+                value = row[col]
+                if col.decode('utf-8') in ('cid', 'name') or not value:
+                    continue
+                row[col] = rejudge_versions[int(value)]
+            writer.writerow(row)
+    print('done!', len(rejudge_versions), 'submits to run')
+
+
 if __name__ == '__main__':
     actions = [
-	add_compiler,
-	add_testcase,
-	set_testcase,
-	rejudge_version,
+        add_compiler,
+        add_testcase,
+        set_testcase,
+        rejudge_version,
         initdb,
-	makedirs,
-	clear_judge_testcase_cache,
+        makedirs,
+        clear_judge_testcase_cache,
+        final_rejudge,
     ]
     action_map = {func.__name__: func for func in actions}
     if len(sys.argv) < 2 or sys.argv[1] not in action_map:
