@@ -279,9 +279,18 @@ def do_testrun():
                 ok = judge_testcase(testcase, exitcode, stdout)
                 status = 'passed' if ok else 'failed'
             results.append(('run{:4d}'.format(i+1), exitcode, stderr, time_sec, status))
-            if status != 'passed':
+            if status == 'failed':
                 final_status = status
                 break
+    if len(results) > 1:
+        times = []
+        for name, exitcode, stderr, time_sec, status in results[1:]:
+            times.append(time_sec)
+        running_time = sum(times) / len(times)
+        if running_time >= testcase['timeout']:
+            final_status = 'timeout'
+    else:
+        running_time = .0
 
     print ' formating log'
     sio = StringIO.StringIO()
@@ -291,13 +300,6 @@ def do_testrun():
     for name, exitcode, stderr, time_sec, status in results:
         sio.write('\n\n=== stderr of {} ===\n'.format(name))
         sio.write(stderr)
-    if len(results) > 1:
-        running_time = .0
-        for name, exitcode, stderr, time_sec, status in results[1:]:
-            running_time += time_sec
-        running_time /= len(results) - 1
-    else:
-        running_time = .0
     print ' log formatted'
 
     print ' submitting run result'

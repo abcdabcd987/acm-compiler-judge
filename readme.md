@@ -71,6 +71,25 @@ gunicorn -b 0.0.0.0:6002 core.core:app  # for production run
 
 ```bash
 ./maintenance.py final_rejudge <input_csv> <output_csv>
+
+# judge: disable cpu frequency scaling
+for CPUFREQ in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+do 
+    echo performance | sudo tee $CPUFREQ
+done
+grep MHz /proc/cpuinfo
+
+# judge: disable Intel Turbo Boost on core0-7
+sudo apt-get install msr-tools
+sudo modprobe msr
+sudo wrmsr -p0 0x1a0 0x4000850089
+sudo wrmsr -p1 0x1a0 0x4000850089
+sudo wrmsr -p2 0x1a0 0x4000850089
+sudo wrmsr -p3 0x1a0 0x4000850089
+sudo wrmsr -p4 0x1a0 0x4000850089
+sudo wrmsr -p5 0x1a0 0x4000850089
+sudo wrmsr -p6 0x1a0 0x4000850089
+sudo wrmsr -p7 0x1a0 0x4000850089
 ```
 
 ## Some tips on `~/.ssh/config`
