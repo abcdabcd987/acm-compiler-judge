@@ -21,6 +21,8 @@ CORE_TESTRUN_STDERR_PATH = os.path.join(BASEDIR, 'data', 'testrun')
 ### Website Settings
 WEBSITE_NAME = 'Compiler 2017'
 WEBROOT = '/compiler2017'
+# FINAL_ROOT = WEBROOT + '/static/final'  # if the final result has been generated
+FINAL_ROOT = None                         # if not final yet
 BUILDS_PER_PAGE = 20
 RUNS_PER_PAGE = 30
 CORE_PORT = 6002

@@ -9,8 +9,8 @@ https://github.com/abcdabcd987/acm-compiler-judge
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}{% endblock %} - {{website_name}}</title>
-    <link href="{{ url_for('static', filename='bootstrap-3.3.7-dist/css/bootstrap.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='layout.css') }}?v=20170228" rel="stylesheet">
+    <link href="{{ROOT}}/static/bootstrap-3.3.7-dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ROOT}}/static/layout.css?v=20170228" rel="stylesheet">
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -21,7 +21,7 @@ https://github.com/abcdabcd987/acm-compiler-judge
   </head>
   <body>
     <!-- Fixed navbar -->
-    <nav class="navbar navbar-default navbar-static-top">
+    <nav class="navbar navbar-inverse navbar-static-top">
       <div class="container">
         <div class="navbar-header">
           <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
@@ -30,21 +30,16 @@ https://github.com/abcdabcd987/acm-compiler-judge
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="{{url_for('homepage')}}">{{website_name}}</a>
+          <a class="navbar-brand" href="{{ROOT}}/">{{website_name}}</a>
         </div>
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
-            <li><a href="{{url_for('homepage')}}"><span class="glyphicon glyphicon-home" aria-hidden="true"></span> Home</a></li>
-            <li><a href="{{url_for('compilers')}}"><span class="glyphicon glyphicon-hdd" aria-hidden="true"></span> Compilers</a></li>
-            <li><a href="{{url_for('builds')}}"><span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Builds</a></li>
-            <li><a href="{{url_for('runs')}}"><span class="glyphicon glyphicon-tasks" aria-hidden="true"></span> Runs</a></li>
-            <li><a href="{{url_for('testcases')}}"><span class="glyphicon glyphicon-file" aria-hidden="true"></span> Testcases</a></li>
-            {% if FINAL_ROOT %}
+            <li><a href="{{ROOT}}/"><span class="glyphicon glyphicon-home" aria-hidden="true"></span> Home</a></li>
+            <li><a href="{{ROOT}}/compilers"><span class="glyphicon glyphicon-hdd" aria-hidden="true"></span> Compilers</a></li>
+            <li><a href="{{ROOT}}/builds"><span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Builds</a></li>
+            <li><a href="{{ROOT}}/runs"><span class="glyphicon glyphicon-tasks" aria-hidden="true"></span> Runs</a></li>
+            <li><a href="{{ROOT}}/testcases"><span class="glyphicon glyphicon-file" aria-hidden="true"></span> Testcases</a></li>
             <li><a href="{{FINAL_ROOT}}/result.html"><span class="glyphicon glyphicon-sort-by-attributes-alt" aria-hidden="true"></span> Final</a></li>
-            {% endif %}
-          </ul>
-          <ul class="nav navbar-nav navbar-right">
-            <li><a href="{{url_for('judges')}}"><span class="glyphicon glyphicon-equalizer" aria-hidden="true"></span> Judge Status</a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
@@ -53,8 +48,8 @@ https://github.com/abcdabcd987/acm-compiler-judge
     {% block content %}{% endblock %}
     </div>
 
-    <script src="{{ url_for('static', filename='jquery-3.1.1.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='bootstrap-3.3.7-dist/js/bootstrap.min.js') }}"></script>
+    <script src="{{ROOT}}/static/jquery-3.1.1.min.js"></script>
+    <script src="{{ROOT}}/static/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
     <script>
     $(function () {
       $('[data-toggle="tooltip"]').tooltip({html: true})

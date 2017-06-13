@@ -70,7 +70,8 @@ gunicorn -b 0.0.0.0:6002 core.core:app  # for production run
 ## Final Rejudge
 
 ```bash
-./maintenance.py final_rejudge <input_csv> <output_csv>
+# core: judge all
+./maintenance.py final_rejudge final/submit.csv final/rejudge.csv
 
 # judge: disable cpu frequency scaling
 for CPUFREQ in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
@@ -90,6 +91,10 @@ sudo wrmsr -p4 0x1a0 0x4000850089
 sudo wrmsr -p5 0x1a0 0x4000850089
 sudo wrmsr -p6 0x1a0 0x4000850089
 sudo wrmsr -p7 0x1a0 0x4000850089
+
+# core: generate final result
+./maintenance.py generate_final_result final/rejudge.csv core/static/final/v1
+vim settings.py
 ```
 
 ## Some tips on `~/.ssh/config`

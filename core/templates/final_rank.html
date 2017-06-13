@@ -1,0 +1,41 @@
+{% extends "final_layout.html" %}
+{% block title %}Final Result{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Final Result</h1>
+</div>
+
+<div class="table-responsive">
+<table class="table table-striped table-hover table-condensed">
+    <thead>
+        <tr>
+            <th>Rank</th>
+            <th style="min-width:6em">Student</th>
+            <th style="border-right: 2px solid #ddd;">Max Score</th>
+            {%- for day in days -%}
+            <th><a href="{{FINAL_ROOT}}/{{day}}/result.html">{{day}}</a> (-{{DISCOUNT[day]}}%)</th>
+            {% endfor -%}
+        </tr>
+    </thead>
+    <tbody>
+        {%- for person in final_rank -%}
+        {%- set compiler_id = person['cid'] -%}
+        {%- set c = compilers[compiler_id] -%}
+        <tr>
+            <td>{{person['rank']}}</td>
+            <td>{{c.student}}</td>
+            <td style="border-right: 2px solid #ddd;"><strong>{{person['max_score']}}</strong></td>
+            {%- for day in days -%}
+            <td>
+            {%- if person['max_day'] == day -%}<strong>{%- endif -%}
+                {{person[day]}}
+            {%- if person['max_day'] == day -%}</strong>{%- endif -%}
+            </td>
+            {% endfor -%}
+        </tr>
+        {% endfor -%}
+    </tbody>
+</table>
+</div>
+
+{% endblock %}

@@ -1,5 +1,6 @@
 data/
 settings.py
+core/static/final/
 
 
 # Created by https://www.gitignore.io/api/python,macos

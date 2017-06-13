@@ -26,6 +26,7 @@ app.jinja_env.globals.update(website_name=settings.WEBSITE_NAME)
 app.jinja_env.globals.update(test_phases=settings.TEST_PHASES)
 app.jinja_env.globals.update(homepage_title=settings.HOMEPAGE_TITLE)
 app.jinja_env.globals.update(homepage_description=settings.HOMEPAGE_DESCRIPTION)
+app.jinja_env.globals.update(FINAL_ROOT=settings.FINAL_ROOT)
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):

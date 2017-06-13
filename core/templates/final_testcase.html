@@ -1,0 +1,56 @@
+{% extends "final_layout.html" %}
+{% block title %}Testcase {{testcase_id}} on {{day}}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>
+        Testcase {{testcase_id}} 
+        <small>
+            on
+            {% if show_score %}<a href="{{FINAL_ROOT}}/{{day}}/result.html">{%- endif -%}
+            {{day}}
+            {% if show_score %}</a>{% endif %}
+            Submissions
+        </small>
+    </h1>
+</div>
+
+<a href="{{FINAL_ROOT}}/all/testcase-{{testcase_id}}.html">
+    See Testcase {{testcase_id}} <em>on All Submissions</em>
+</a>
+
+<div class="table-responsive">
+<table class="table table-striped table-hover table-condensed">
+    <thead>
+        <tr>
+            <th>Rank</th>
+            <th>SHA</th>
+            <th style="min-width:6em">Student</th>
+            <th>Compile Time</th>
+            <th>Running Time</th>
+            {%- if show_score %}
+            <th>Score</th>
+            {% endif -%}
+            <th>Log</th>
+        </tr>
+    </thead>
+    <tbody>
+        {%- for run in list -%}
+        {%- set v = versions[run['version_id']]['version'] -%}
+        {%- set c = compilers[v.compiler_id] -%}
+        <tr>
+            <td>{{run['rank']}}</td>
+            <td><a href="{{ROOT}}/build/{{v.id}}" class="monospace" data-toggle="tooltip" data-placement="right" title="{{v.message | nl2monobr}}">{{v.sha[:8]}}</a></td>
+            <td>{{c.student}}</td>
+            <td>{{'{:.3f}s'.format(run['compile_time'])}}</td>
+            <td><strong>{{'{:.3f}s'.format(run['running_time'])}}</strong></td>
+            {%- if show_score %}
+            <td>+{{run['score']}}</td>
+            {% endif -%}
+            <td><a href="{{ROOT}}/show/runlog_{{run['id']}}.html">(See Log)</a></td>
+        </tr>
+        {% endfor -%}
+    </tbody>
+</table>
+</div>
+
+{% endblock %}
