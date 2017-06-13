@@ -28,7 +28,7 @@
             <th>Compile Time</th>
             <th>Running Time</th>
             {%- if show_score %}
-            <th>Score</th>
+            <th>Points</th>
             {% endif -%}
             <th>Log</th>
         </tr>
@@ -44,7 +44,7 @@
             <td>{{'{:.3f}s'.format(run['compile_time'])}}</td>
             <td><strong>{{'{:.3f}s'.format(run['running_time'])}}</strong></td>
             {%- if show_score %}
-            <td>+{{run['score']}}</td>
+            <td>+{{run['points']}}</td>
             {% endif -%}
             <td><a href="{{ROOT}}/show/runlog_{{run['id']}}.html">(See Log)</a></td>
         </tr>

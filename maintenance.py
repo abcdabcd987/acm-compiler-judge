@@ -208,7 +208,7 @@ def generate_final_result():
             set_rank(l, 'running_time')
             for d in l:
                 rank = d['rank']
-                d['score'] = SCORE[rank] if rank < len(SCORE) else SCORE[-1]
+                d['points'] = 31 - rank
 
             running_times = map(lambda testcase: testcase['running_time'], l)
             median = running_times[len(running_times) // 2]
@@ -225,23 +225,28 @@ def generate_final_result():
                 'avg': sum(running_times) / len(running_times),
                 'median': median,
             }
+        for t in testcases.keys():
+            if testcases[t]['max'] < 0.1:
+                del testcases[t]
         return testcases
     
     def gen_person_rank(rejudge_table, versions, testcase_rank, discount):
-        people = {cid: {'score': 0, 'cid': cid} for cid in rejudge_table}
+        people = {cid: {'points': 0, 'cid': cid} for cid in rejudge_table}
         for t in testcase_rank.itervalues():
             for d in t['list']:
                 version_id = d['version_id']
                 cid = versions[version_id]['version'].compiler_id
-                people[cid]['score'] += d['score']
+                people[cid]['points'] += d['points']
                 people[cid]['version_id'] = version_id
         for cid in people.keys():
             if 'version_id' not in people[cid]:
                 del people[cid]
-        people = sorted(people.itervalues(), key=lambda x: x['score'], reverse=True)
-        set_rank(people, 'score')
+        people = sorted(people.itervalues(), key=lambda x: x['points'], reverse=True)
+        set_rank(people, 'points')
         for person in people:
-            person['discounted_score'] = int(person['score'] * (1.0 - discount / 100.0))
+            score = SCORE[person['rank']] if person['rank'] < len(SCORE) else SCORE[-1]
+            person['score'] = 85 + score
+            person['discounted_score'] = person['score'] * (1.0 - discount / 100.0)
         return people
     
     def gen_final_rank(person_rank):
@@ -269,7 +274,6 @@ def generate_final_result():
     compilers = {c.id: c for c in db_session.query(Compiler)}
     rejudge_versions = set()
     rejudge_table = {}
-    testcase_set = set()
     with open(sys.argv[2]) as fin:
         reader = csv.DictReader(fin)
         fieldnames = reader.fieldnames
@@ -292,12 +296,10 @@ def generate_final_result():
                       .filter(TestRun.phase.in_(['optim pretest', 'optim extended']))
 
     for t in query:
-        testcase_set.add(t.testcase_id)
         versions[t.version_id]['testcase'][t.testcase_id] = t
     days = list(fieldnames)
     days.remove('cid')
     days.remove('name')
-    testcase_list = sorted(testcase_set)
 
     # setup output environment
     output_dir = sys.argv[3]
@@ -352,6 +354,7 @@ def generate_final_result():
         
         # generate daily person rank
         person_rank[day] = gen_person_rank(rejudge_table, versions, testcase_rank[day], DISCOUNT[day])
+        testcase_list = sorted(testcase_rank[day].iterkeys())
         template = env.get_template('final_person.html')
         filename = os.path.join(output_dir, day, 'result.html')
         with codecs.open(filename, 'w', 'utf-8') as f:

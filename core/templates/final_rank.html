@@ -24,12 +24,14 @@
         <tr>
             <td>{{person['rank']}}</td>
             <td>{{c.student}}</td>
-            <td style="border-right: 2px solid #ddd;"><strong>{{person['max_score']}}</strong></td>
+            <td style="border-right: 2px solid #ddd;"><strong>{{'{:.2f}'.format(person['max_score'])}}</strong></td>
             {%- for day in days -%}
             <td>
+            {%- if person[day] -%}
             {%- if person['max_day'] == day -%}<strong>{%- endif -%}
-                {{person[day]}}
+                {{'{:.2f}'.format(person[day])}}
             {%- if person['max_day'] == day -%}</strong>{%- endif -%}
+            {%- endif -%}
             </td>
             {% endfor -%}
         </tr>

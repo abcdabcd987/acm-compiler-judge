@@ -12,6 +12,7 @@
             <th>Rank</th>
             <th>SHA</th>
             <th style="min-width:6em">Student</th>
+            <th>Points</th>
             <th>Score</th>
             <th style="border-right: 2px solid #ddd;">-{{discount}}%</th>
             {%- for t in testcase_list -%}
@@ -28,8 +29,9 @@
             <td>{{person['rank']}}</td>
             <td><a href="{{ROOT}}/build/{{v.id}}" class="monospace" data-toggle="tooltip" data-placement="right" title="{{v.message | nl2monobr}}">{{v.sha[:8]}}</a></td>
             <td>{{c.student}}</td>
+            <td>{{person['points']}}</td>
             <td>{{person['score']}}</td>
-            <td style="border-right: 2px solid #ddd;"><strong>{{person['discounted_score']}}</strong></td>
+            <td style="border-right: 2px solid #ddd;"><strong>{{'{:.2f}'.format(person['discounted_score'])}}</strong></td>
             {%- for t in testcase_list -%}
             <td>{{testcase_rank[t]['vmap'][version_id]['rank']}}</td>
             {% endfor -%}
